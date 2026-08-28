@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // Плагины Flutter
     id("dev.flutter.flutter-gradle-plugin")
 }
 
@@ -20,8 +19,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -31,10 +28,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
     }
@@ -42,6 +35,10 @@ android {
     flutter {
         source = "../.."
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
