@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:package_info_plus/package_info_plus.dart';  // <-- эта строка обязательна
 
 class Updater {
   static const String repoOwner = 'Deniskaaaz';
@@ -93,7 +94,6 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Открываем APK через системный установщик
       final result = await OpenFilex.open(file.path);
       if (result.type != ResultType.done) {
         _showError(context, 'Не удалось открыть APK');
