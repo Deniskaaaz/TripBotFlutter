@@ -1,20 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:apk_installer/apk_installer.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class Updater {
-  // Владелец и название репозитория на GitHub
   static const String repoOwner = 'Deniskaaaz';
   static const String repoName = 'TripBotFlutter';
 
-  // Текущая версия приложения (должна совпадать с pubspec.yaml)
-  static const String currentVersion = '1.0.0';
-
-  // Проверить наличие обновлений
   static Future<void> checkForUpdate(BuildContext context) async {
     try {
       final response = await http.get(
@@ -27,8 +22,11 @@ class Updater {
       final tagName = data['tag_name'] as String? ?? '';
       final latestVersion = tagName.replaceFirst('v', '');
 
+      // Получаем текущую версию из package_info_plus
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+
       if (_isNewer(latestVersion, currentVersion)) {
-        // Найти APK среди ассетов релиза
         final assets = data['assets'] as List<dynamic>? ?? [];
         String? downloadUrl;
         for (final asset in assets) {
@@ -48,7 +46,6 @@ class Updater {
     }
   }
 
-  // Сравнение версий "1.2.3"
   static bool _isNewer(String latest, String current) {
     List<int> parse(String v) => v.split('.').map((e) => int.tryParse(e) ?? 0).toList();
     final latestParts = parse(latest);
@@ -62,7 +59,6 @@ class Updater {
     return false;
   }
 
-  // Диалог с предложением обновления
   static void _showUpdateDialog(BuildContext context, String downloadUrl) {
     showDialog(
       context: context,
@@ -86,7 +82,6 @@ class Updater {
     );
   }
 
-  // Скачивание APK и запуск установки
   static Future<void> _downloadAndInstall(String url, BuildContext context) async {
     try {
       final dir = await getTemporaryDirectory();
@@ -100,10 +95,10 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Открыть файл через системный обработчик (установщик)
-      final result = await OpenFilex.open(file.path);
-      if (result.type != ResultType.done) {
-        _showError(context, 'Не удалось открыть APK');
+      // Установка APK через apk_installer
+      final result = await ApkInstaller.install(file.path);
+      if (result != null && result.isNotEmpty) {
+        _showError(context, 'Ошибка установки: $result');
       }
     } catch (e) {
       _showError(context, 'Не удалось установить: $e');
