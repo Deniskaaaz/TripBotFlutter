@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:apk_installer/apk_installer.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class Updater {
@@ -22,7 +22,6 @@ class Updater {
       final tagName = data['tag_name'] as String? ?? '';
       final latestVersion = tagName.replaceFirst('v', '');
 
-      // Получаем текущую версию из package_info_plus
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
@@ -95,10 +94,10 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Установка APK через apk_installer
-      final result = await ApkInstaller.install(file.path);
-      if (result != null && result.isNotEmpty) {
-        _showError(context, 'Ошибка установки: $result');
+      // Открываем APK через системный установщик
+      final result = await OpenFilex.open(file.path);
+      if (result.type != ResultType.done) {
+        _showError(context, 'Не удалось открыть APK');
       }
     } catch (e) {
       _showError(context, 'Не удалось установить: $e');

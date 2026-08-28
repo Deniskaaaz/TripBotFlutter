@@ -17,7 +17,6 @@ dependencies:
   url_launcher: ^6.3.2
   shared_preferences: ^2.5.3
   package_info_plus: ^8.0.0
-  apk_installer: ^1.0.0
 
 dev_dependencies:
   flutter_test:
