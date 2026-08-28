@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Updater.checkForUpdate(context);
           });
-          return const TripListScreen();
+          return TripListScreen();
         },
       ),
     );
