@@ -14,16 +14,32 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Trip Bot',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+        ),
+        cardTheme: CardTheme(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: Builder(
         builder: (context) {
-          // Проверяем обновления при запуске
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Updater.checkForUpdate(context);
           });
-          return TripListScreen();
+          return const TripListScreen();
         },
       ),
     );

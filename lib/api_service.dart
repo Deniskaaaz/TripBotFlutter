@@ -3,10 +3,8 @@ import 'package:http/http.dart' as http;
 import 'models/trip.dart';
 
 class ApiService {
-  // Базовый URL вашего API на VPS
   static const String baseUrl = 'http://31.130.128.105:8888';
 
-  // Получить список поездок пользователя
   static Future<List<Trip>> getTrips(int userId) async {
     final response = await http.get(Uri.parse('$baseUrl/trips/$userId'));
 
@@ -18,7 +16,6 @@ class ApiService {
     }
   }
 
-  // Рассчитать маршрут
   static Future<Map<String, dynamic>> calculateRoute({
     required String origin,
     required String destination,
@@ -41,7 +38,6 @@ class ApiService {
     }
   }
 
-  // Сохранить поездку
   static Future<bool> saveTrip({
     required int userId,
     required String city,

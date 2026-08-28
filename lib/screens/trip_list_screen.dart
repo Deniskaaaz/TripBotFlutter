@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
+import '../user_settings.dart';
 import 'create_trip_screen.dart';
+import 'settings_screen.dart';
 import 'trip_detail_screen.dart';
 
 class TripListScreen extends StatefulWidget {
@@ -28,7 +30,8 @@ class _TripListScreenState extends State<TripListScreen> {
       _error = null;
     });
     try {
-      final trips = await ApiService.getTrips(1);
+      final userId = await UserSettings.getUserId();
+      final trips = await ApiService.getTrips(userId);
       setState(() {
         _trips = trips;
         _isLoading = false;
@@ -46,6 +49,18 @@ class _TripListScreenState extends State<TripListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Мои поездки'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+              _loadTrips();
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {

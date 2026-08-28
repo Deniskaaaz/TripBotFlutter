@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
+import '../user_settings.dart';
 
 class CreateTripScreen extends StatefulWidget {
   const CreateTripScreen({Key? key}) : super(key: key);
@@ -80,8 +81,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     });
 
     try {
+      final userId = await UserSettings.getUserId();
       final success = await ApiService.saveTrip(
-        userId: 1, // временно фиксированный user_id
+        userId: userId,
         city: _cityController.text.trim(),
         startPoint: _startController.text.trim(),
         endPoint: _endController.text.trim(),
@@ -89,7 +91,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         totalDurationSec: _durationSec!,
       );
       if (success) {
-        // Возвращаем true, чтобы список перезагрузился
         Navigator.pop(context, true);
       }
     } catch (e) {
