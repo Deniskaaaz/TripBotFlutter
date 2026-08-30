@@ -13,12 +13,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   final _cityController = TextEditingController();
   final _startController = TextEditingController();
   final _endController = TextEditingController();
-  final _costController = TextEditingController(); // новое поле стоимости
 
   double? _distanceKm;
   int? _durationSec;
   String? _originCoords;
   String? _destCoords;
+  double? _tripCost; // автоматически рассчитанная стоимость
   bool _isCalculating = false;
   bool _isSaving = false;
   String _message = '';
@@ -28,7 +28,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _cityController.dispose();
     _startController.dispose();
     _endController.dispose();
-    _costController.dispose();
     super.dispose();
   }
 
@@ -55,11 +54,22 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         destination: destination,
         city: city,
       );
+      final distanceKm = result['distance_km'] as double?;
+      final durationSec = result['duration_sec'] as int?;
+      final originCoords = result['origin_coords'] as List<dynamic>?;
+      final destCoords = result['dest_coords'] as List<dynamic>?;
+
+      if (distanceKm == null || durationSec == null) {
+        throw Exception('Некорректный ответ сервера');
+      }
+
+      // Автоматически считаем стоимость
+      final cost = await UserSettings.calculateTripCost(distanceKm);
+
       setState(() {
-        _distanceKm = result['distance_km'] as double?;
-        _durationSec = result['duration_sec'] as int?;
-        final originCoords = result['origin_coords'] as List<dynamic>?;
-        final destCoords = result['dest_coords'] as List<dynamic>?;
+        _distanceKm = distanceKm;
+        _durationSec = durationSec;
+        _tripCost = cost;
         if (originCoords != null && originCoords.length == 2) {
           _originCoords = '${originCoords[0]},${originCoords[1]}';
         }
@@ -67,7 +77,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           _destCoords = '${destCoords[0]},${destCoords[1]}';
         }
         _message = 'Маршрут: ${_distanceKm?.toStringAsFixed(1)} км, '
-            '${(_durationSec! / 60).round()} мин';
+            '${(_durationSec! / 60).round()} мин\n'
+            'Стоимость: ${_tripCost?.toStringAsFixed(2)} ₽';
       });
     } catch (e) {
       setState(() {
@@ -98,10 +109,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       if (_originCoords != null) points.add(_originCoords!);
       if (_destCoords != null) points.add(_destCoords!);
 
-      // Стоимость: парсим из текстового поля, по умолчанию 0.0
-      final costText = _costController.text.trim().replaceAll(',', '.');
-      final cost = double.tryParse(costText) ?? 0.0;
-
       final success = await ApiService.saveTrip(
         userId: userId,
         city: _cityController.text.trim(),
@@ -109,7 +116,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         endPoint: _endController.text.trim(),
         totalKm: _distanceKm!,
         totalDurationSec: _durationSec!,
-        totalCost: cost,
+        totalCost: _tripCost ?? 0.0,
         points: points,
       );
       if (success) {
@@ -150,12 +157,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             TextField(
               controller: _endController,
               decoration: const InputDecoration(labelText: 'Конечная точка (адрес)'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _costController,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Стоимость (₽)'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
