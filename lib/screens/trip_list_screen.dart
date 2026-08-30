@@ -108,7 +108,7 @@ class _TripListScreenState extends State<TripListScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => TripDetailScreen(tripId: trip.id),
+                                  builder: (context) => TripDetailScreen(trip: trip),
                                 ),
                               );
                             },
