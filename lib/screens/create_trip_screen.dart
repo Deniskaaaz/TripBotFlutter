@@ -19,12 +19,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   DateTime? _pauseStartTime;
   Duration _totalPauseDuration = Duration.zero;
   bool _isSaving = false;
+  bool _isAddingPoint = false;
   String _message = '';
 
   final _cityController = TextEditingController(text: 'Нижний Новгород');
   final _manualAddressController = TextEditingController();
 
-  // Для карты
   LatLng? _mapCenter;
   double _mapZoom = 12;
 
@@ -78,13 +78,33 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() => _message = 'Введите адрес');
       return;
     }
-    // Для простоты добавляем адрес как координаты? Нет, адрес не является координатой.
-    // Предположим, что пользователь вводит координаты? Лучше не будем добавлять в карту,
-    // а просто в список точек-строк? Мы сейчас используем LatLng, поэтому ручной ввод не подходит.
-    // Можно заменить на геокодирование, но пока оставим как заглушку с сообщением.
     setState(() {
-      _message = 'Ручной ввод адреса пока не поддержан, используйте GPS';
+      _isAddingPoint = true;
+      _message = 'Геокодирование...';
     });
+    try {
+      final result = await ApiService.geocodeAddress(
+        address,
+        city: _cityController.text.trim(),
+      );
+      final lat = result['lat'] as double?;
+      final lon = result['lon'] as double?;
+      if (lat == null || lon == null) {
+        throw Exception('Координаты не найдены');
+      }
+      final latLng = LatLng(lat, lon);
+      setState(() {
+        _points.add(latLng);
+        if (!_isTripActive) _isTripActive = true;
+        _mapCenter = latLng;
+        _message = 'Адрес добавлен (${_points.length})';
+        _manualAddressController.clear();
+      });
+    } catch (e) {
+      setState(() => _message = 'Ошибка геокодирования: $e');
+    } finally {
+      setState(() => _isAddingPoint = false);
+    }
   }
 
   void _togglePause() {
@@ -125,7 +145,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     });
 
     try {
-      // Преобразуем LatLng в строки "lat,lon"
       final pointStrings = _points.map((p) => '${p.latitude},${p.longitude}').toList();
       final routeResult = await ApiService.calculateMultiRoute(
         points: pointStrings,
@@ -151,7 +170,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         points: pointStrings,
       );
       if (success) {
-        // Показать итоговый диалог с картой и статистикой
         _showSummaryDialog(distanceKm, durationSec, cost);
       }
     } catch (e) {
@@ -175,7 +193,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Мини-карта с маршрутом
               SizedBox(
                 height: 200,
                 child: FlutterMap(
@@ -231,7 +248,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              Navigator.of(context).pop(true); // возврат к списку
+              Navigator.of(context).pop(true);
             },
             child: const Text('Готово'),
           ),
@@ -255,12 +272,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       ),
       body: Column(
         children: [
-          // Карта
           Expanded(
             flex: 3,
             child: FlutterMap(
               options: MapOptions(
-                center: _mapCenter ?? LatLng(56.3269, 44.0075), // Нижний Новгород
+                center: _mapCenter ?? const LatLng(56.3269, 44.0075),
                 zoom: _mapZoom,
               ),
               children: [
@@ -273,8 +289,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                   markers: _points.map((p) {
                     return Marker(
                       point: p,
-                      width: 40,
-                      height: 40,
+                      width: 20,
+                      height: 20,
                       child: const Icon(Icons.circle, color: Colors.blue, size: 20),
                     );
                   }).toList(),
@@ -292,7 +308,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ],
             ),
           ),
-          // Панель управления
           Expanded(
             flex: 2,
             child: Padding(
@@ -303,6 +318,17 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                   TextField(
                     controller: _cityController,
                     decoration: const InputDecoration(labelText: 'Город'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _manualAddressController,
+                    decoration: const InputDecoration(labelText: 'Адрес вручную'),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: _isAddingPoint ? null : _addManualAddress,
+                    icon: const Icon(Icons.edit_location_alt_rounded),
+                    label: const Text('Добавить адрес'),
                   ),
                   const SizedBox(height: 10),
                   Row(
