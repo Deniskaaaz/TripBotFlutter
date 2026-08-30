@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
 
 class TripDetailScreen extends StatelessWidget {
@@ -6,9 +8,23 @@ class TripDetailScreen extends StatelessWidget {
 
   const TripDetailScreen({Key? key, required this.trip}) : super(key: key);
 
+  // Преобразование строки "lat,lon" в LatLng
+  LatLng? _parseLatLng(String? input) {
+    if (input == null || input.isEmpty) return null;
+    final parts = input.split(',');
+    if (parts.length != 2) return null;
+    final lat = double.tryParse(parts[0].trim());
+    final lon = double.tryParse(parts[1].trim());
+    if (lat == null || lon == null) return null;
+    return LatLng(lat, lon);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Преобразование секунд в часы и минуты
+    // Извлекаем точки
+    final points = trip.points.map((p) => _parseLatLng(p)).whereType<LatLng>().toList();
+    final hasMap = points.isNotEmpty;
+
     final durationHours = trip.totalDurationSec ~/ 3600;
     final durationMinutes = (trip.totalDurationSec % 3600) ~/ 60;
     final durationText = durationHours > 0
@@ -27,6 +43,67 @@ class TripDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Карта (если есть координаты)
+            if (hasMap) ...[
+              Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  height: 250,
+                  child: FlutterMap(
+                    options: MapOptions(
+                      center: points.first,
+                      zoom: 12,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        subdomains: const ['a', 'b', 'c'],
+                        userAgentPackageName: 'com.tripbot.trip_bot_app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: points.first,
+                            width: 40,
+                            height: 40,
+                            builder: (ctx) => const Icon(
+                              Icons.trip_origin,
+                              color: Colors.green,
+                              size: 40,
+                            ),
+                          ),
+                          if (points.length > 1)
+                            Marker(
+                              point: points.last,
+                              width: 40,
+                              height: 40,
+                              builder: (ctx) => const Icon(
+                                Icons.place,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (points.length > 1)
+                        PolylineLayer(
+                          polylines: [
+                            Polyline(
+                              points: points,
+                              strokeWidth: 4,
+                              color: Colors.deepPurple,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Заголовок маршрута
             Card(
               elevation: 3,
@@ -118,39 +195,6 @@ class TripDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Точки маршрута (если есть)
-            if (trip.points.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Card(
-                elevation: 3,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.alt_route, color: Colors.deepPurple),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Промежуточные точки (${trip.points.length})',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      for (final point in trip.points)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(point),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

@@ -16,6 +16,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   double? _distanceKm;
   int? _durationSec;
+  String? _originCoords; // "lat,lon"
+  String? _destCoords;   // "lat,lon"
   bool _isCalculating = false;
   bool _isSaving = false;
   String _message = '';
@@ -54,6 +56,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _distanceKm = result['distance_km'] as double?;
         _durationSec = result['duration_sec'] as int?;
+        // Сохраняем координаты из ответа
+        final originCoords = result['origin_coords'] as List<dynamic>?;
+        final destCoords = result['dest_coords'] as List<dynamic>?;
+        if (originCoords != null && originCoords.length == 2) {
+          _originCoords = '${originCoords[0]},${originCoords[1]}';
+        }
+        if (destCoords != null && destCoords.length == 2) {
+          _destCoords = '${destCoords[0]},${destCoords[1]}';
+        }
         _message = 'Маршрут: ${_distanceKm?.toStringAsFixed(1)} км, '
             '${(_durationSec! / 60).round()} мин';
       });
@@ -82,6 +93,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     try {
       final userId = await UserSettings.getUserId();
+      // Формируем список точек для сохранения
+      final points = <String>[];
+      if (_originCoords != null) points.add(_originCoords!);
+      if (_destCoords != null) points.add(_destCoords!);
+
       final success = await ApiService.saveTrip(
         userId: userId,
         city: _cityController.text.trim(),
@@ -89,6 +105,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         endPoint: _endController.text.trim(),
         totalKm: _distanceKm!,
         totalDurationSec: _durationSec!,
+        points: points, // передаём координаты
       );
       if (success) {
         Navigator.pop(context, true);
