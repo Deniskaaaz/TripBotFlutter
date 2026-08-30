@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
+import 'admin_user_detail_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   final String password;
@@ -60,9 +61,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             ? '$hours ч $minutes мин'
                             : '$minutes мин';
 
-                        // Ник Telegram и ID
                         final username = user['username'] as String?;
-                        final displayName = username != null && username.isNotEmpty
+                        final displayName = (username != null && username.isNotEmpty)
                             ? '$username (ID: ${user['user_id']})'
                             : 'User ID: ${user['user_id']}';
 
@@ -87,6 +87,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                               'Стоимость: ${(user['total_cost'] ?? 0).toStringAsFixed(2)} ₽',
                             ),
                             isThreeLine: true,
+                            onTap: () {
+                              // Переход к подробностям пользователя
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AdminUserDetailScreen(
+                                    userId: user['user_id'] as int,
+                                    username: username,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },
