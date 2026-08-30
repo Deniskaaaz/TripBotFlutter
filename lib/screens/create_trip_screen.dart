@@ -10,7 +10,8 @@ class CreateTripScreen extends StatefulWidget {
 }
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
-  final _cityController = TextEditingController();
+  // Предзаполняем город
+  final _cityController = TextEditingController(text: 'Нижний Новгород');
   final _startController = TextEditingController();
   final _endController = TextEditingController();
 
@@ -18,7 +19,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   int? _durationSec;
   String? _originCoords;
   String? _destCoords;
-  double? _tripCost; // автоматически рассчитанная стоимость
+  double? _tripCost;
   bool _isCalculating = false;
   bool _isSaving = false;
   String _message = '';
@@ -63,7 +64,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         throw Exception('Некорректный ответ сервера');
       }
 
-      // Автоматически считаем стоимость
       final cost = await UserSettings.calculateTripCost(distanceKm);
 
       setState(() {
