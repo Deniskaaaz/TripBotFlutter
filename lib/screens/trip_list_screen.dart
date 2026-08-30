@@ -4,6 +4,7 @@ import '../models/trip.dart';
 import '../user_settings.dart';
 import 'create_trip_screen.dart';
 import 'settings_screen.dart';
+import 'stats_screen.dart';
 import 'trip_detail_screen.dart';
 
 class TripListScreen extends StatefulWidget {
@@ -50,6 +51,15 @@ class _TripListScreenState extends State<TripListScreen> {
       appBar: AppBar(
         title: const Text('Мои поездки'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const StatsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
@@ -109,7 +119,21 @@ class _TripListScreenState extends State<TripListScreen> {
                           itemBuilder: (context, index) {
                             final trip = _trips[index];
                             return Card(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.white,
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.deepPurple.withOpacity(0.2),
+                                  child: const Icon(
+                                    Icons.route,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
                                 title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
                                 subtitle: Text(
                                   '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
