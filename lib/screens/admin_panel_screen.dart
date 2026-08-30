@@ -95,6 +95,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                   builder: (context) => AdminUserDetailScreen(
                                     userId: user['user_id'] as int,
                                     username: username,
+									password: widget.password,
                                   ),
                                 ),
                               );

@@ -6,8 +6,13 @@ import 'trip_detail_screen.dart';
 class AdminUserDetailScreen extends StatefulWidget {
   final int userId;
   final String? username;
-  const AdminUserDetailScreen({Key? key, required this.userId, this.username})
-      : super(key: key);
+  final String password;
+  const AdminUserDetailScreen({
+    Key? key,
+    required this.userId,
+    this.username,
+    required this.password,
+  }) : super(key: key);
 
   @override
   _AdminUserDetailScreenState createState() => _AdminUserDetailScreenState();
@@ -31,7 +36,6 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
       _error = null;
     });
     try {
-      // Загружаем поездки и статистику параллельно
       final results = await Future.wait([
         ApiService.getTrips(widget.userId),
         ApiService.getStats(widget.userId),
@@ -49,6 +53,46 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
     }
   }
 
+  Future<void> _confirmDeleteTrip(int tripId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить поездку?'),
+        content: const Text('Это действие нельзя отменить.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final success = await ApiService.adminDeleteTrip(tripId, widget.password);
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Поездка удалена')),
+            );
+          }
+          _loadData(); // обновляем список
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка удаления: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayTitle = widget.username != null && widget.username!.isNotEmpty
@@ -63,10 +107,8 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
               ? Center(child: Text('Ошибка: $_error'))
               : Column(
                   children: [
-                    // Статистика пользователя
                     if (_stats != null) _buildStatsSection(),
                     const Divider(height: 1),
-                    // Список поездок
                     Expanded(
                       child: _trips.isEmpty
                           ? const Center(child: Text('Нет поездок'))
@@ -89,7 +131,16 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                     subtitle: Text(
                                       '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
                                     ),
-                                    trailing: const Icon(Icons.chevron_right),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () => _confirmDeleteTrip(trip.id),
+                                        ),
+                                        const Icon(Icons.chevron_right),
+                                      ],
+                                    ),
                                     onTap: () {
                                       Navigator.push(
                                         context,
