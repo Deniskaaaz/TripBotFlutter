@@ -8,7 +8,6 @@ class TripDetailScreen extends StatelessWidget {
 
   const TripDetailScreen({Key? key, required this.trip}) : super(key: key);
 
-  // Преобразование строки "lat,lon" в LatLng
   LatLng? _parseLatLng(String? input) {
     if (input == null || input.isEmpty) return null;
     final parts = input.split(',');
@@ -21,7 +20,6 @@ class TripDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Извлекаем точки
     final points = trip.points.map((p) => _parseLatLng(p)).whereType<LatLng>().toList();
     final hasMap = points.isNotEmpty;
 
@@ -43,7 +41,6 @@ class TripDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Карта (если есть координаты)
             if (hasMap) ...[
               Card(
                 elevation: 3,
@@ -68,7 +65,7 @@ class TripDetailScreen extends StatelessWidget {
                             point: points.first,
                             width: 40,
                             height: 40,
-                            builder: (ctx) => const Icon(
+                            child: const Icon(
                               Icons.trip_origin,
                               color: Colors.green,
                               size: 40,
@@ -79,7 +76,7 @@ class TripDetailScreen extends StatelessWidget {
                               point: points.last,
                               width: 40,
                               height: 40,
-                              builder: (ctx) => const Icon(
+                              child: const Icon(
                                 Icons.place,
                                 color: Colors.red,
                                 size: 40,
@@ -202,7 +199,6 @@ class TripDetailScreen extends StatelessWidget {
   }
 }
 
-// Виджет для строки с иконкой и текстом
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
