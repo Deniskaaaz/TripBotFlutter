@@ -13,11 +13,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   final _cityController = TextEditingController();
   final _startController = TextEditingController();
   final _endController = TextEditingController();
+  final _costController = TextEditingController(); // новое поле стоимости
 
   double? _distanceKm;
   int? _durationSec;
-  String? _originCoords; // "lat,lon"
-  String? _destCoords;   // "lat,lon"
+  String? _originCoords;
+  String? _destCoords;
   bool _isCalculating = false;
   bool _isSaving = false;
   String _message = '';
@@ -27,6 +28,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     _cityController.dispose();
     _startController.dispose();
     _endController.dispose();
+    _costController.dispose();
     super.dispose();
   }
 
@@ -56,7 +58,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _distanceKm = result['distance_km'] as double?;
         _durationSec = result['duration_sec'] as int?;
-        // Сохраняем координаты из ответа
         final originCoords = result['origin_coords'] as List<dynamic>?;
         final destCoords = result['dest_coords'] as List<dynamic>?;
         if (originCoords != null && originCoords.length == 2) {
@@ -93,10 +94,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     try {
       final userId = await UserSettings.getUserId();
-      // Формируем список точек для сохранения
       final points = <String>[];
       if (_originCoords != null) points.add(_originCoords!);
       if (_destCoords != null) points.add(_destCoords!);
+
+      // Стоимость: парсим из текстового поля, по умолчанию 0.0
+      final costText = _costController.text.trim().replaceAll(',', '.');
+      final cost = double.tryParse(costText) ?? 0.0;
 
       final success = await ApiService.saveTrip(
         userId: userId,
@@ -105,7 +109,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         endPoint: _endController.text.trim(),
         totalKm: _distanceKm!,
         totalDurationSec: _durationSec!,
-        points: points, // передаём координаты
+        totalCost: cost,
+        points: points,
       );
       if (success) {
         Navigator.pop(context, true);
@@ -145,6 +150,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             TextField(
               controller: _endController,
               decoration: const InputDecoration(labelText: 'Конечная точка (адрес)'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _costController,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Стоимость (₽)'),
             ),
             const SizedBox(height: 20),
             ElevatedButton(

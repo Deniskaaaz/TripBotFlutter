@@ -60,6 +60,12 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             ? '$hours ч $minutes мин'
                             : '$minutes мин';
 
+                        // Ник Telegram и ID
+                        final username = user['username'] as String?;
+                        final displayName = username != null && username.isNotEmpty
+                            ? '$username (ID: ${user['user_id']})'
+                            : 'User ID: ${user['user_id']}';
+
                         return Card(
                           elevation: 3,
                           shape: RoundedRectangleBorder(
@@ -73,7 +79,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                 color: Colors.deepPurple,
                               ),
                             ),
-                            title: Text('User ID: ${user['user_id']}'),
+                            title: Text(displayName),
                             subtitle: Text(
                               'Поездок: ${user['trips_count']}\n'
                               'Км: ${(user['total_km'] ?? 0).toStringAsFixed(1)}\n'

@@ -18,6 +18,23 @@ class TripDetailScreen extends StatelessWidget {
     return LatLng(lat, lon);
   }
 
+  // Форматирование timestamp в ДД.ММ.ГГГГ, ЧЧ:ММ (МСК)
+  String _formatTimestamp(String raw) {
+    // Пытаемся распарсить как ISO или как "YYYY-MM-DD HH:MM:SS"
+    DateTime? dt = DateTime.tryParse(raw);
+    if (dt == null) {
+      // Попробуем заменить пробел на T и распарсить
+      final normalized = raw.replaceFirst(' ', 'T');
+      dt = DateTime.tryParse(normalized);
+    }
+    if (dt == null) return raw; // если не получилось, вернём как есть
+
+    // Приводим к московскому времени (UTC+3)
+    final msk = dt.toUtc().add(const Duration(hours: 3));
+    final two = (n) => n.toString().padLeft(2, '0');
+    return '${two(msk.day)}.${two(msk.month)}.${msk.year}, ${two(msk.hour)}:${two(msk.minute)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final points = trip.points.map((p) => _parseLatLng(p)).whereType<LatLng>().toList();
@@ -179,7 +196,7 @@ class TripDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Дата и время
+            // Дата и время (отформатированные)
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -188,7 +205,7 @@ class TripDetailScreen extends StatelessWidget {
                 child: _InfoRow(
                   icon: Icons.calendar_today,
                   label: 'Дата и время',
-                  value: trip.timestamp,
+                  value: _formatTimestamp(trip.timestamp),
                 ),
               ),
             ),
