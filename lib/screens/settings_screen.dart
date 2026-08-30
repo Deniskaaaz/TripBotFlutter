@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 import '../user_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -9,44 +10,70 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _userIdController = TextEditingController();
+  final _usernameController = TextEditingController();
   int? _currentUserId;
+  bool _isSaving = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentUserId();
+    _loadCurrentUser();
   }
 
-  Future<void> _loadCurrentUserId() async {
+  Future<void> _loadCurrentUser() async {
     final id = await UserSettings.getUserId();
     setState(() {
       _currentUserId = id;
-      _userIdController.text = id.toString();
     });
   }
 
   @override
   void dispose() {
-    _userIdController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveUserId() async {
-    final text = _userIdController.text.trim();
-    if (text.isEmpty) return;
-    final id = int.tryParse(text);
-    if (id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введите корректное число')),
-      );
+  Future<void> _saveUsername() async {
+    final username = _usernameController.text.trim();
+    if (username.isEmpty) {
+      setState(() {
+        _error = 'Введите username';
+      });
       return;
     }
-    await UserSettings.setUserId(id);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User ID сохранён')),
-      );
+
+    setState(() {
+      _isSaving = true;
+      _error = null;
+    });
+
+    try {
+      final userId = await ApiService.resolveUsername(username);
+      if (userId == null) {
+        setState(() {
+          _isSaving = false;
+          _error = 'Пользователь не найден';
+        });
+        return;
+      }
+
+      await UserSettings.setUserId(userId);
+      setState(() {
+        _currentUserId = userId;
+        _isSaving = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User ID сохранён: $userId')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isSaving = false;
+        _error = 'Ошибка: $e';
+      });
     }
   }
 
@@ -60,20 +87,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TextField(
-              controller: _userIdController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Ваш User ID'),
+              controller: _usernameController,
+              decoration: const InputDecoration(
+                labelText: 'Ваш Telegram username',
+                hintText: 'например, deniskaaaz (без @)',
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _saveUserId,
-              child: const Text('Сохранить'),
+              onPressed: _isSaving ? null : _saveUsername,
+              child: _isSaving
+                  ? const CircularProgressIndicator()
+                  : const Text('Сохранить'),
             ),
-            if (_currentUserId != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Text('Текущий ID: $_currentUserId'),
+            if (_currentUserId != null) ...[
+              const SizedBox(height: 10),
+              Text('Текущий ID: $_currentUserId'),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                _error!,
+                style: const TextStyle(color: Colors.red),
               ),
+            ],
           ],
         ),
       ),

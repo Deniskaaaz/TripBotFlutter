@@ -87,4 +87,33 @@ class ApiService {
       throw Exception('Ошибка загрузки статистики: ${response.statusCode}');
     }
   }
+
+  // Проверка пароля администратора
+  static Future<bool> adminLogin(String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/admin/login?password=$password'),
+    );
+    return response.statusCode == 200;
+  }
+
+  // Получить список пользователей для админки
+  static Future<List<Map<String, dynamic>>> adminUsers(String password) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/users?password=$password'),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    } else {
+      throw Exception('Ошибка доступа: ${response.statusCode}');
+    }
+  }
+
+  // Удалить поездку по ID (пока не используется в UI, но может пригодиться)
+  static Future<bool> adminDeleteTrip(int tripId, String password) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/admin/trip/$tripId?password=$password'),
+    );
+    return response.statusCode == 200;
+  }
 }
