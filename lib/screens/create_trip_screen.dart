@@ -98,7 +98,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         if (!_isTripActive) _isTripActive = true;
         _mapCenter = latLng;
         _message = 'Адрес добавлен (${_points.length})';
-        _manualAddressController.clear();
+        _manualAddressController.clear(); // очищаем для следующего адреса
       });
     } catch (e) {
       setState(() => _message = 'Ошибка геокодирования: $e');
@@ -272,8 +272,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
-            flex: 3,
+          // Карта фиксированной высоты
+          SizedBox(
+            height: 200,
+            width: double.infinity,
             child: FlutterMap(
               options: MapOptions(
                 center: _mapCenter ?? const LatLng(56.3269, 44.0075),
@@ -308,9 +310,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ],
             ),
           ),
+          // Остальная часть экрана с прокруткой
           Expanded(
-            flex: 2,
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
