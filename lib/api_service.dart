@@ -5,10 +5,8 @@ import 'models/trip.dart';
 class ApiService {
   static const String baseUrl = 'http://31.130.128.105:8888';
 
-  // Получить список поездок пользователя
   static Future<List<Trip>> getTrips(int userId) async {
     final response = await http.get(Uri.parse('$baseUrl/trips/$userId'));
-
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Trip.fromJson(json as Map<String, dynamic>)).toList();
@@ -17,7 +15,6 @@ class ApiService {
     }
   }
 
-  // Рассчитать маршрут
   static Future<Map<String, dynamic>> calculateRoute({
     required String origin,
     required String destination,
@@ -32,7 +29,6 @@ class ApiService {
         'city': city,
       }),
     );
-
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
@@ -40,7 +36,25 @@ class ApiService {
     }
   }
 
-  // Сохранить поездку
+  static Future<Map<String, dynamic>> calculateMultiRoute({
+    required List<String> points,
+    String city = '',
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/route_multi'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'points': points,
+        'city': city,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Ошибка расчёта маршрута: ${response.statusCode}');
+    }
+  }
+
   static Future<bool> saveTrip({
     required int userId,
     required String city,
@@ -69,7 +83,6 @@ class ApiService {
         'username': username,
       }),
     );
-
     if (response.statusCode == 200) {
       return true;
     } else {
@@ -77,10 +90,8 @@ class ApiService {
     }
   }
 
-  // Получить статистику по пользователю
   static Future<Map<String, dynamic>> getStats(int userId) async {
     final response = await http.get(Uri.parse('$baseUrl/stats/$userId'));
-
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
@@ -88,7 +99,6 @@ class ApiService {
     }
   }
 
-  // Проверка пароля администратора
   static Future<bool> adminLogin(String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/admin/login?password=$password'),
@@ -96,7 +106,6 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // Получить список пользователей для админки
   static Future<List<Map<String, dynamic>>> adminUsers(String password) async {
     final response = await http.get(
       Uri.parse('$baseUrl/admin/users?password=$password'),
@@ -109,7 +118,6 @@ class ApiService {
     }
   }
 
-  // Удалить поездку по ID
   static Future<bool> adminDeleteTrip(int tripId, String password) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/admin/trip/$tripId?password=$password'),
@@ -117,7 +125,6 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // Получить user_id по нику Telegram
   static Future<int?> resolveUsername(String username) async {
     final response = await http.get(
       Uri.parse('$baseUrl/resolve_username?username=${Uri.encodeComponent(username)}'),
