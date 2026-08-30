@@ -90,32 +90,44 @@ class _TripListScreenState extends State<TripListScreen> {
                     ],
                   ),
                 )
-              : _trips.isEmpty
-                  ? const Center(child: Text('Пока нет поездок'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: _trips.length,
-                      itemBuilder: (context, index) {
-                        final trip = _trips[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
-                            subtitle: Text(
-                              '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
+              : RefreshIndicator(
+                  onRefresh: _loadTrips,
+                  child: _trips.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(
+                              height: 200,
+                              child: Center(child: Text('Пока нет поездок')),
                             ),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => TripDetailScreen(trip: trip),
+                          ],
+                        )
+                      : ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(8),
+                          itemCount: _trips.length,
+                          itemBuilder: (context, index) {
+                            final trip = _trips[index];
+                            return Card(
+                              child: ListTile(
+                                title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
+                                subtitle: Text(
+                                  '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
                                 ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                                trailing: const Icon(Icons.chevron_right),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TripDetailScreen(trip: trip),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                ),
     );
   }
 }
