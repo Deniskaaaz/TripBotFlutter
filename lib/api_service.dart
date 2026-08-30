@@ -109,11 +109,24 @@ class ApiService {
     }
   }
 
-  // Удалить поездку по ID (пока не используется в UI, но может пригодиться)
+  // Удалить поездку по ID
   static Future<bool> adminDeleteTrip(int tripId, String password) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/admin/trip/$tripId?password=$password'),
     );
     return response.statusCode == 200;
+  }
+
+  // Получить user_id по нику Telegram
+  static Future<int?> resolveUsername(String username) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/resolve_username?username=${Uri.encodeComponent(username)}'),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data['user_id'] as int?;
+    } else {
+      return null;
+    }
   }
 }

@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
       home: Builder(
         builder: (context) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Updater.checkForUpdate(context);
+            // Updater.checkForUpdate(context);
           });
           return const TripListScreen();
         },
