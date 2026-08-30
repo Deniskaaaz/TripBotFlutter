@@ -63,7 +63,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         _StatCard(
                           icon: Icons.straighten_rounded,
                           label: 'Общий километраж',
-                          value: '${_stats!['total_km'] ?? 0.0} км',
+                          value: '${(_stats!['total_km'] ?? 0.0).toStringAsFixed(1)} км',
                           color: Colors.green,
                           gradient: [Colors.green.shade400, Colors.green.shade700],
                         ),
@@ -77,14 +77,14 @@ class _StatsScreenState extends State<StatsScreen> {
                         _StatCard(
                           icon: Icons.attach_money_rounded,
                           label: 'Общая стоимость',
-                          value: '${_stats!['total_cost'] ?? 0.0} ₽',
+                          value: '${(_stats!['total_cost'] ?? 0.0).toStringAsFixed(2)} ₽',
                           color: Colors.deepPurple,
                           gradient: [Colors.deepPurple.shade400, Colors.deepPurple.shade700],
                         ),
                         _StatCard(
                           icon: Icons.speed_rounded,
                           label: 'Средняя дистанция',
-                          value: '${_stats!['avg_km'] ?? 0.0} км',
+                          value: '${(_stats!['avg_km'] ?? 0.0).toStringAsFixed(1)} км',
                           color: Colors.teal,
                           gradient: [Colors.teal.shade400, Colors.teal.shade700],
                         ),
