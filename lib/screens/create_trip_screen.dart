@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../api_service.dart';
 import '../user_settings.dart';
+import '../active_trip_storage.dart';
 
 class CreateTripScreen extends StatefulWidget {
   const CreateTripScreen({Key? key}) : super(key: key);
@@ -31,7 +32,33 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   @override
   void initState() {
     super.initState();
+    _restoreActiveTrip();
     _checkLocationPermission();
+  }
+
+  Future<void> _restoreActiveTrip() async {
+    final saved = await ActiveTripStorage.loadActiveTrip();
+    if (saved != null) {
+      final pointStrings = saved['points'] as List<String>;
+      final points = pointStrings.map((s) {
+        final parts = s.split(',');
+        if (parts.length == 2) {
+          final lat = double.tryParse(parts[0]);
+          final lon = double.tryParse(parts[1]);
+          if (lat != null && lon != null) return LatLng(lat, lon);
+        }
+        return null;
+      }).whereType<LatLng>().toList();
+
+      setState(() {
+        _points.addAll(points);
+        _totalPauseDuration = Duration(seconds: saved['pauseSeconds'] as int? ?? 0);
+        _isPaused = saved['isPaused'] as bool? ?? false;
+        _pauseStartTime = saved['pauseStartTime'] as DateTime?;
+        _isTripActive = _points.isNotEmpty;
+        if (_points.isNotEmpty) _mapCenter = _points.last;
+      });
+    }
   }
 
   Future<void> _checkLocationPermission() async {
@@ -55,6 +82,20 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
   }
 
+  Future<void> _saveActiveTrip() async {
+    if (_points.isEmpty) {
+      await ActiveTripStorage.clearActiveTrip();
+      return;
+    }
+    final pointStrings = _points.map((p) => '${p.latitude},${p.longitude}').toList();
+    await ActiveTripStorage.saveActiveTrip(
+      points: pointStrings,
+      pauseSeconds: _totalPauseDuration.inSeconds,
+      isPaused: _isPaused,
+      pauseStartTime: _pauseStartTime,
+    );
+  }
+
   Future<void> _addCurrentLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -67,6 +108,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _mapCenter = latLng;
         _message = 'Точка добавлена (${_points.length})';
       });
+      await _saveActiveTrip();
     } catch (e) {
       setState(() => _message = 'Не удалось получить GPS: $e');
     }
@@ -98,8 +140,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         if (!_isTripActive) _isTripActive = true;
         _mapCenter = latLng;
         _message = 'Адрес добавлен (${_points.length})';
-        _manualAddressController.clear(); // очищаем для следующего адреса
+        _manualAddressController.clear();
       });
+      await _saveActiveTrip();
     } catch (e) {
       setState(() => _message = 'Ошибка геокодирования: $e');
     } finally {
@@ -121,6 +164,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           _pauseStartTime = null;
           _message = 'Поездка продолжена';
         });
+        _saveActiveTrip();
       }
     } else {
       setState(() {
@@ -128,6 +172,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _pauseStartTime = DateTime.now();
         _message = 'Пауза начата';
       });
+      _saveActiveTrip();
     }
   }
 
@@ -170,6 +215,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         points: pointStrings,
       );
       if (success) {
+        await ActiveTripStorage.clearActiveTrip();
         _showSummaryDialog(distanceKm, durationSec, cost);
       }
     } catch (e) {
@@ -269,10 +315,25 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Активная поездка'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () async {
+              await ActiveTripStorage.clearActiveTrip();
+              setState(() {
+                _points.clear();
+                _totalPauseDuration = Duration.zero;
+                _isTripActive = false;
+                _isPaused = false;
+                _pauseStartTime = null;
+                _message = 'Черновик поездки удалён';
+              });
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
-          // Карта фиксированной высоты
           SizedBox(
             height: 200,
             width: double.infinity,
@@ -310,7 +371,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ],
             ),
           ),
-          // Остальная часть экрана с прокруткой
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
