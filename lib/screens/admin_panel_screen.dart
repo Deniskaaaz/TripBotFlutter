@@ -51,6 +51,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               : _users.isEmpty
                   ? const Center(child: Text('Нет пользователей'))
                   : ListView.builder(
+                      padding: const EdgeInsets.all(8),
                       itemCount: _users.length,
                       itemBuilder: (context, index) {
                         final user = _users[index];
@@ -69,13 +70,18 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         return Card(
                           elevation: 3,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.deepPurple.withOpacity(0.2),
+                            leading: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurple.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
                               child: const Icon(
-                                Icons.person,
+                                Icons.person_rounded,
                                 color: Colors.deepPurple,
                               ),
                             ),
@@ -88,14 +94,13 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             ),
                             isThreeLine: true,
                             onTap: () {
-                              // Переход к подробностям пользователя
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => AdminUserDetailScreen(
                                     userId: user['user_id'] as int,
                                     username: username,
-									password: widget.password,
+                                    password: widget.password,
                                   ),
                                 ),
                               );

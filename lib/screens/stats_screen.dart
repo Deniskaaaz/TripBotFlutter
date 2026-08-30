@@ -43,68 +43,52 @@ class _StatsScreenState extends State<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Статистика'),
-      ),
+      appBar: AppBar(title: const Text('Статистика')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Ошибка: $_error'),
-                      const SizedBox(height: 10),
-                      ElevatedButton(
-                        onPressed: _loadStats,
-                        child: const Text('Повторить'),
-                      ),
-                    ],
-                  ),
-                )
+              ? Center(child: Text('Ошибка: $_error'))
               : _stats == null
                   ? const Center(child: Text('Нет данных'))
-                  : Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _StatCard(
-                            icon: Icons.confirmation_number,
-                            label: 'Всего поездок',
-                            value: '${_stats!['trips_count'] ?? 0}',
-                            color: Colors.blue,
-                          ),
-                          const SizedBox(height: 12),
-                          _StatCard(
-                            icon: Icons.straighten,
-                            label: 'Общий километраж',
-                            value: '${_stats!['total_km'] ?? 0.0} км',
-                            color: Colors.green,
-                          ),
-                          const SizedBox(height: 12),
-                          _StatCard(
-                            icon: Icons.timer,
-                            label: 'Общее время',
-                            value: _formatDuration(_stats!['total_duration'] ?? 0),
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(height: 12),
-                          _StatCard(
-                            icon: Icons.attach_money,
-                            label: 'Общая стоимость',
-                            value: '${_stats!['total_cost'] ?? 0.0} ₽',
-                            color: Colors.deepPurple,
-                          ),
-                          const SizedBox(height: 12),
-                          _StatCard(
-                            icon: Icons.speed,
-                            label: 'Средняя дистанция',
-                            value: '${_stats!['avg_km'] ?? 0.0} км',
-                            color: Colors.teal,
-                          ),
-                        ],
-                      ),
+                  : ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _StatCard(
+                          icon: Icons.confirmation_number_rounded,
+                          label: 'Всего поездок',
+                          value: '${_stats!['trips_count'] ?? 0}',
+                          color: Colors.blue,
+                          gradient: [Colors.blue.shade400, Colors.blue.shade700],
+                        ),
+                        _StatCard(
+                          icon: Icons.straighten_rounded,
+                          label: 'Общий километраж',
+                          value: '${_stats!['total_km'] ?? 0.0} км',
+                          color: Colors.green,
+                          gradient: [Colors.green.shade400, Colors.green.shade700],
+                        ),
+                        _StatCard(
+                          icon: Icons.timer_rounded,
+                          label: 'Общее время',
+                          value: _formatDuration(_stats!['total_duration'] ?? 0),
+                          color: Colors.orange,
+                          gradient: [Colors.orange.shade400, Colors.orange.shade700],
+                        ),
+                        _StatCard(
+                          icon: Icons.attach_money_rounded,
+                          label: 'Общая стоимость',
+                          value: '${_stats!['total_cost'] ?? 0.0} ₽',
+                          color: Colors.deepPurple,
+                          gradient: [Colors.deepPurple.shade400, Colors.deepPurple.shade700],
+                        ),
+                        _StatCard(
+                          icon: Icons.speed_rounded,
+                          label: 'Средняя дистанция',
+                          value: '${_stats!['avg_km'] ?? 0.0} км',
+                          color: Colors.teal,
+                          gradient: [Colors.teal.shade400, Colors.teal.shade700],
+                        ),
+                      ],
                     ),
     );
   }
@@ -125,27 +109,41 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
+  final List<Color> gradient;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: color.withOpacity(0.2),
-              child: Icon(icon, color: color, size: 28),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -154,7 +152,10 @@ class _StatCard extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -162,6 +163,7 @@ class _StatCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ],

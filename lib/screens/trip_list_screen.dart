@@ -6,7 +6,7 @@ import 'create_trip_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'trip_detail_screen.dart';
-import 'admin_login_screen.dart'; // добавлен импорт
+import 'admin_login_screen.dart';
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({Key? key}) : super(key: key);
@@ -52,9 +52,9 @@ class _TripListScreenState extends State<TripListScreen> {
       appBar: AppBar(
         title: const Text('Мои поездки'),
         actions: [
-          // Кнопка статистики
           IconButton(
-            icon: const Icon(Icons.bar_chart),
+            tooltip: 'Статистика',
+            icon: const Icon(Icons.bar_chart_rounded),
             onPressed: () {
               Navigator.push(
                 context,
@@ -62,19 +62,19 @@ class _TripListScreenState extends State<TripListScreen> {
               );
             },
           ),
-          // Кнопка админ-панели
           IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
+            tooltip: 'Админ-панель',
+            icon: const Icon(Icons.admin_panel_settings_rounded),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AdminLoginScreen()),
+                MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
               );
             },
           ),
-          // Кнопка настроек
           IconButton(
-            icon: const Icon(Icons.settings),
+            tooltip: 'Настройки',
+            icon: const Icon(Icons.settings_rounded),
             onPressed: () async {
               await Navigator.push(
                 context,
@@ -95,7 +95,7 @@ class _TripListScreenState extends State<TripListScreen> {
             _loadTrips();
           }
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -104,11 +104,14 @@ class _TripListScreenState extends State<TripListScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 8),
                       Text('Ошибка: $_error'),
                       const SizedBox(height: 10),
-                      ElevatedButton(
+                      ElevatedButton.icon(
                         onPressed: _loadTrips,
-                        child: const Text('Повторить'),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Повторить'),
                       ),
                     ],
                   ),
@@ -121,7 +124,16 @@ class _TripListScreenState extends State<TripListScreen> {
                           children: const [
                             SizedBox(
                               height: 200,
-                              child: Center(child: Text('Пока нет поездок')),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.route_rounded, size: 48, color: Colors.grey),
+                                    SizedBox(height: 8),
+                                    Text('Пока нет поездок'),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         )
@@ -131,40 +143,81 @@ class _TripListScreenState extends State<TripListScreen> {
                           itemCount: _trips.length,
                           itemBuilder: (context, index) {
                             final trip = _trips[index];
-                            return Card(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.grey[800]
-                                  : Colors.white,
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.deepPurple.withOpacity(0.2),
-                                  child: const Icon(
-                                    Icons.route,
-                                    color: Colors.deepPurple,
+                            return _TripCard(
+                              trip: trip,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TripDetailScreen(trip: trip),
                                   ),
-                                ),
-                                title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
-                                subtitle: Text(
-                                  '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => TripDetailScreen(trip: trip),
-                                    ),
-                                  );
-                                },
-                              ),
+                                );
+                              },
                             );
                           },
                         ),
                 ),
+    );
+  }
+}
+
+class _TripCard extends StatelessWidget {
+  final Trip trip;
+  final VoidCallback onTap;
+
+  const _TripCard({required this.trip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.deepPurple.shade300, Colors.deepPurple.shade600],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.route_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${trip.city}: ${trip.startPoint} → ${trip.endPoint}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.deepPurple),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -81,7 +81,7 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
               const SnackBar(content: Text('Поездка удалена')),
             );
           }
-          _loadData(); // обновляем список
+          _loadData();
         }
       } catch (e) {
         if (mounted) {
@@ -120,12 +120,20 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                 return Card(
                                   elevation: 2,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: Colors.deepPurple.withOpacity(0.2),
-                                      child: const Icon(Icons.route, color: Colors.deepPurple),
+                                    leading: Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: Colors.deepPurple.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.route_rounded,
+                                        color: Colors.deepPurple,
+                                      ),
                                     ),
                                     title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
                                     subtitle: Text(
@@ -135,10 +143,10 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          icon: const Icon(Icons.delete_rounded, color: Colors.red),
                                           onPressed: () => _confirmDeleteTrip(trip.id),
                                         ),
-                                        const Icon(Icons.chevron_right),
+                                        const Icon(Icons.chevron_right_rounded, color: Colors.deepPurple),
                                       ],
                                     ),
                                     onTap: () {
