@@ -6,6 +6,7 @@ import 'create_trip_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'trip_detail_screen.dart';
+import 'admin_login_screen.dart'; // добавлен импорт
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({Key? key}) : super(key: key);
@@ -51,6 +52,7 @@ class _TripListScreenState extends State<TripListScreen> {
       appBar: AppBar(
         title: const Text('Мои поездки'),
         actions: [
+          // Кнопка статистики
           IconButton(
             icon: const Icon(Icons.bar_chart),
             onPressed: () {
@@ -60,6 +62,17 @@ class _TripListScreenState extends State<TripListScreen> {
               );
             },
           ),
+          // Кнопка админ-панели
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+              );
+            },
+          ),
+          // Кнопка настроек
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
