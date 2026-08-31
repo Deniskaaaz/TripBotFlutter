@@ -15,6 +15,7 @@ class CreateTripScreen extends StatefulWidget {
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
   final List<LatLng> _points = [];
+  List<LatLng> _routeGeometry = []; // реальная геометрия маршрута по дорогам
   bool _isTripActive = false;
   bool _isPaused = false;
   DateTime? _pauseStartTime;
@@ -201,6 +202,22 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         throw Exception('Некорректный ответ сервера');
       }
 
+      // Получаем геометрию маршрута, если сервер её вернул
+      final geometry = routeResult['geometry'] as List<dynamic>?;
+      if (geometry != null) {
+        _routeGeometry = geometry.map((coord) {
+          // координаты приходят в формате [lat, lon]
+          if (coord is List && coord.length >= 2) {
+            final lat = (coord[0] as num).toDouble();
+            final lon = (coord[1] as num).toDouble();
+            return LatLng(lat, lon);
+          }
+          return null;
+        }).whereType<LatLng>().toList();
+      } else {
+        _routeGeometry = [];
+      }
+
       final userId = await UserSettings.getUserId();
       final cost = await UserSettings.calculateTripCost(distanceKm);
       final success = await ApiService.saveTrip(
@@ -216,7 +233,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       );
       if (success) {
         await ActiveTripStorage.clearActiveTrip();
-        _showSummaryDialog(distanceKm, durationSec, cost);
+        _showSummaryDialog(distanceKm, durationSec, cost, _routeGeometry.isNotEmpty ? _routeGeometry : _points);
       }
     } catch (e) {
       setState(() {
@@ -229,7 +246,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
   }
 
-  void _showSummaryDialog(double distanceKm, int durationSec, double cost) {
+  void _showSummaryDialog(double distanceKm, int durationSec, double cost, List<LatLng> routePoints) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -243,7 +260,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 height: 200,
                 child: FlutterMap(
                   options: MapOptions(
-                    center: _points.first,
+                    center: routePoints.first,
                     zoom: 12,
                   ),
                   children: [
@@ -255,14 +272,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: _points.first,
+                          point: routePoints.first,
                           width: 40,
                           height: 40,
                           child: const Icon(Icons.trip_origin, color: Colors.green, size: 40),
                         ),
-                        if (_points.length > 1)
+                        if (routePoints.length > 1)
                           Marker(
-                            point: _points.last,
+                            point: routePoints.last,
                             width: 40,
                             height: 40,
                             child: const Icon(Icons.place, color: Colors.red, size: 40),
@@ -272,7 +289,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     PolylineLayer(
                       polylines: [
                         Polyline(
-                          points: _points,
+                          points: routePoints,
                           strokeWidth: 4,
                           color: Colors.deepPurple,
                         ),
@@ -322,6 +339,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               await ActiveTripStorage.clearActiveTrip();
               setState(() {
                 _points.clear();
+                _routeGeometry.clear();
                 _totalPauseDuration = Duration.zero;
                 _isTripActive = false;
                 _isPaused = false;
