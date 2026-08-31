@@ -28,8 +28,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   final _cityController = TextEditingController(text: 'Нижний Новгород');
   final _manualAddressController = TextEditingController();
 
-  LatLng? _mapCenter;
-  double _mapZoom = 12;
+  final MapController _mapController = MapController(); // контроллер карты
 
   @override
   void initState() {
@@ -59,12 +58,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _pauseStartTime = saved['pauseStartTime'] as DateTime?;
         _isTripActive = _points.isNotEmpty;
         if (_points.isNotEmpty) {
-          _mapCenter = _points.last;
-          _mapZoom = 16;
+          _mapController.move(_points.last, 16);
         }
       });
 
-      // Если восстановили более одной точки, запросим геометрию
       if (_points.length >= 2) {
         await _updateRouteGeometry();
       }
@@ -106,9 +103,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 
-  // Новый метод: обновляет геометрию маршрута на основе текущих точек
   Future<void> _updateRouteGeometry() async {
-    if (_isUpdatingGeometry) return; // избегаем параллельных запросов
+    if (_isUpdatingGeometry) return;
     if (_points.length < 2) return;
 
     setState(() {
@@ -136,7 +132,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         });
       }
     } catch (e) {
-      // Ошибка получения геометрии – оставляем прямые линии
       print('Ошибка обновления геометрии: $e');
     } finally {
       setState(() {
@@ -155,10 +150,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
-        _mapCenter = latLng;
-        _mapZoom = 16;
         _message = 'Точка добавлена (${_points.length})';
       });
+      _mapController.move(latLng, 16);
       await _saveActiveTrip();
       if (_points.length >= 2) {
         await _updateRouteGeometry();
@@ -192,11 +186,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
-        _mapCenter = latLng;
-        _mapZoom = 16;
         _message = 'Адрес добавлен (${_points.length})';
         _manualAddressController.clear();
       });
+      _mapController.move(latLng, 16);
       await _saveActiveTrip();
       if (_points.length >= 2) {
         await _updateRouteGeometry();
@@ -406,7 +399,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Определяем, какие точки использовать для полилинии на карте
     final displayedPoints = _routeGeometry.isNotEmpty ? _routeGeometry : _points;
 
     return Scaffold(
@@ -436,9 +428,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             height: 200,
             width: double.infinity,
             child: FlutterMap(
+              mapController: _mapController,
               options: MapOptions(
-                center: _mapCenter ?? const LatLng(56.3269, 44.0075),
-                zoom: _mapZoom,
+                center: _points.isNotEmpty
+                    ? _points.last
+                    : const LatLng(56.3269, 44.0075),
+                zoom: _points.isNotEmpty ? 16 : 12,
               ),
               children: [
                 TileLayer(
