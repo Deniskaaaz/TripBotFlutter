@@ -15,7 +15,7 @@ class CreateTripScreen extends StatefulWidget {
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
   final List<LatLng> _points = [];
-  List<LatLng> _routeGeometry = []; // реальная геометрия маршрута по дорогам
+  List<LatLng> _routeGeometry = [];
   bool _isTripActive = false;
   bool _isPaused = false;
   DateTime? _pauseStartTime;
@@ -202,11 +202,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         throw Exception('Некорректный ответ сервера');
       }
 
-      // Получаем геометрию маршрута, если сервер её вернул
       final geometry = routeResult['geometry'] as List<dynamic>?;
       if (geometry != null) {
         _routeGeometry = geometry.map((coord) {
-          // координаты приходят в формате [lat, lon]
           if (coord is List && coord.length >= 2) {
             final lat = (coord[0] as num).toDouble();
             final lon = (coord[1] as num).toDouble();
@@ -218,13 +216,25 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _routeGeometry = [];
       }
 
+      // Обратное геокодирование начальной и конечной точек
+      String startAddress = pointStrings.first;
+      String endAddress = pointStrings.last;
+      try {
+        final startLatLng = _points.first;
+        final endLatLng = _points.last;
+        final startAddr = await ApiService.reverseGeocode(startLatLng.latitude, startLatLng.longitude);
+        if (startAddr != null && startAddr.isNotEmpty) startAddress = startAddr;
+        final endAddr = await ApiService.reverseGeocode(endLatLng.latitude, endLatLng.longitude);
+        if (endAddr != null && endAddr.isNotEmpty) endAddress = endAddr;
+      } catch (_) {}
+
       final userId = await UserSettings.getUserId();
       final cost = await UserSettings.calculateTripCost(distanceKm);
       final success = await ApiService.saveTrip(
         userId: userId,
         city: _cityController.text.trim(),
-        startPoint: pointStrings.first,
-        endPoint: pointStrings.last,
+        startPoint: startAddress,
+        endPoint: endAddress,
         totalKm: distanceKm,
         totalDurationSec: durationSec,
         totalPauseSec: _totalPauseDuration.inSeconds,
