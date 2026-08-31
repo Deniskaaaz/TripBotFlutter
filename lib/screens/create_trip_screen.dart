@@ -26,9 +26,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   String _message = '';
 
   final _cityController = TextEditingController(text: 'Нижний Новгород');
-  final _manualAddressController = TextEditingController();
+  final _addressController = TextEditingController();
+  List<String> _addressSuggestions = [];
 
-  final MapController _mapController = MapController(); // контроллер карты
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -162,12 +163,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
   }
 
-  Future<void> _addManualAddress() async {
-    final address = _manualAddressController.text.trim();
-    if (address.isEmpty) {
-      setState(() => _message = 'Введите адрес');
-      return;
-    }
+  Future<void> _addAddressFromSuggestion(String address) async {
+    _addressController.text = address;
+    setState(() => _addressSuggestions = []);
+    // Геокодируем выбранный адрес
     setState(() {
       _isAddingPoint = true;
       _message = 'Геокодирование...';
@@ -187,7 +186,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
         _message = 'Адрес добавлен (${_points.length})';
-        _manualAddressController.clear();
+        _addressController.clear();
       });
       _mapController.move(latLng, 16);
       await _saveActiveTrip();
@@ -198,6 +197,22 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() => _message = 'Ошибка геокодирования: $e');
     } finally {
       setState(() => _isAddingPoint = false);
+    }
+  }
+
+  Future<void> _fetchAddressSuggestions(String query) async {
+    if (query.length < 3) {
+      setState(() => _addressSuggestions = []);
+      return;
+    }
+    try {
+      final suggestions = await ApiService.suggestAddresses(
+        query,
+        city: _cityController.text.trim(),
+      );
+      setState(() => _addressSuggestions = suggestions);
+    } catch (e) {
+      setState(() => _addressSuggestions = []);
     }
   }
 
@@ -393,7 +408,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   @override
   void dispose() {
     _cityController.dispose();
-    _manualAddressController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
@@ -475,16 +490,33 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     decoration: const InputDecoration(labelText: 'Город'),
                   ),
                   const SizedBox(height: 10),
+                  // Поле ввода адреса с подсказками
                   TextField(
-                    controller: _manualAddressController,
-                    decoration: const InputDecoration(labelText: 'Адрес вручную'),
+                    controller: _addressController,
+                    decoration: const InputDecoration(labelText: 'Адрес (начните вводить)'),
+                    onChanged: _fetchAddressSuggestions,
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton.icon(
-                    onPressed: _isAddingPoint ? null : _addManualAddress,
-                    icon: const Icon(Icons.edit_location_alt_rounded),
-                    label: const Text('Добавить адрес'),
-                  ),
+                  if (_addressSuggestions.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _addressSuggestions.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final suggestion = _addressSuggestions[index];
+                          return ListTile(
+                            dense: true,
+                            title: Text(suggestion),
+                            onTap: () => _addAddressFromSuggestion(suggestion),
+                          );
+                        },
+                      ),
+                    ),
                   const SizedBox(height: 10),
                   Row(
                     children: [

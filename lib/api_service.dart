@@ -161,4 +161,18 @@ class ApiService {
       return null;
     }
   }
+  static Future<List<String>> suggestAddresses(String query, {String? city}) async {
+    final uri = Uri.parse('$baseUrl/address_suggest').replace(queryParameters: {
+      'query': query,
+      if (city != null && city.isNotEmpty) 'city': city,
+    });
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final suggestions = data['suggestions'] as List<dynamic>? ?? [];
+      return suggestions.map((e) => e.toString()).toList();
+    } else {
+      return [];
+    }
+  } 
 }
