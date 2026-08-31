@@ -9,6 +9,7 @@ import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'trip_detail_screen.dart';
 import 'admin_login_screen.dart';
+import 'all_trips_map_screen.dart'; // новый импорт
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({Key? key}) : super(key: key);
@@ -109,7 +110,7 @@ class _TripListScreenState extends State<TripListScreen> {
                       foregroundColor: Colors.white,
                       flexibleSpace: FlexibleSpaceBar(
                         title: const Text('Мои поездки'),
-                        // centerTitle не указан, поэтому заголовок будет слева
+                        // centerTitle не указан, заголовок слева
                         background: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -144,6 +145,7 @@ class _TripListScreenState extends State<TripListScreen> {
                       actions: [
                         IconButton(
                           icon: const Icon(Icons.bar_chart_rounded),
+                          tooltip: 'Статистика',
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -152,7 +154,18 @@ class _TripListScreenState extends State<TripListScreen> {
                           },
                         ),
                         IconButton(
+                          icon: const Icon(Icons.map_outlined),
+                          tooltip: 'Все поездки на карте',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AllTripsMapScreen()),
+                            );
+                          },
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.admin_panel_settings_rounded),
+                          tooltip: 'Админ-панель',
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -162,6 +175,7 @@ class _TripListScreenState extends State<TripListScreen> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.settings_rounded),
+                          tooltip: 'Настройки',
                           onPressed: () async {
                             await Navigator.push(
                               context,
