@@ -109,7 +109,7 @@ class _TripListScreenState extends State<TripListScreen> {
                       foregroundColor: Colors.white,
                       flexibleSpace: FlexibleSpaceBar(
                         title: const Text('Мои поездки'),
-                        centerTitle: true,
+                        // centerTitle не указан, поэтому заголовок будет слева
                         background: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(

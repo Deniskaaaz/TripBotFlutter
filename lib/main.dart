@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'screens/trip_list_screen.dart';
+import 'screens/create_trip_screen.dart';
 import 'updater.dart';
 import 'notifications.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initNotifications();
+  await initNotifications(onTap: (payload) {
+    // При нажатии на уведомление переходим в активную поездку
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (context) => const CreateTripScreen()),
+    );
+  });
   runApp(const MyApp());
 }
 
@@ -17,6 +25,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Trip Bot',
       debugShowCheckedModeBanner: false,
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

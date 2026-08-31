@@ -3,12 +3,23 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future<void> initNotifications() async {
+Future<void> initNotifications({required void Function(String?) onTap}) async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      onTap(response.payload);
+    },
+  );
+
+  // Запрос разрешения на Android 13+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
 }
 
 Future<void> showActiveTripNotification() async {
@@ -25,7 +36,7 @@ Future<void> showActiveTripNotification() async {
   await flutterLocalNotificationsPlugin.show(
     0,
     'Незавершённая поездка',
-    'У вас есть активная поездка. Завершите её или продолжайте.',
+    'У вас есть активная поездка. Нажмите, чтобы продолжить.',
     platformChannelSpecifics,
   );
 }
