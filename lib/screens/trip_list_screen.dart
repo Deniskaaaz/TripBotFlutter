@@ -20,22 +20,33 @@ class _TripListScreenState extends State<TripListScreen> {
   bool _isLoading = true;
   String? _error;
 
+  // Данные для шапки
+  int _tripsCount = 0;
+  double _totalKm = 0.0;
+
   @override
   void initState() {
     super.initState();
-    _loadTrips();
+    _loadData();
   }
 
-  Future<void> _loadTrips() async {
+  Future<void> _loadData() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
       final userId = await UserSettings.getUserId();
-      final trips = await ApiService.getTrips(userId);
+      final tripsFuture = ApiService.getTrips(userId);
+      final statsFuture = ApiService.getStats(userId);
+
+      final results = await Future.wait([tripsFuture, statsFuture]);
+
       setState(() {
-        _trips = trips;
+        _trips = results[0] as List<Trip>;
+        final stats = results[1] as Map<String, dynamic>;
+        _tripsCount = stats['trips_count'] as int? ?? 0;
+        _totalKm = (stats['total_km'] as num?)?.toDouble() ?? 0.0;
         _isLoading = false;
       });
     } catch (e) {
@@ -49,54 +60,6 @@ class _TripListScreenState extends State<TripListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Мои поездки'),
-        actions: [
-          IconButton(
-            tooltip: 'Статистика',
-            icon: const Icon(Icons.bar_chart_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const StatsScreen()),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Админ-панель',
-            icon: const Icon(Icons.admin_panel_settings_rounded),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Настройки',
-            icon: const Icon(Icons.settings_rounded),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-              _loadTrips();
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateTripScreen()),
-          );
-          if (created == true) {
-            _loadTrips();
-          }
-        },
-        child: const Icon(Icons.add_rounded),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -109,54 +72,123 @@ class _TripListScreenState extends State<TripListScreen> {
                       Text('Ошибка: $_error'),
                       const SizedBox(height: 10),
                       ElevatedButton.icon(
-                        onPressed: _loadTrips,
+                        onPressed: _loadData,
                         icon: const Icon(Icons.refresh),
                         label: const Text('Повторить'),
                       ),
                     ],
                   ),
                 )
-              : RefreshIndicator(
-                  onRefresh: _loadTrips,
-                  child: _trips.isEmpty
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: const [
-                            SizedBox(
-                              height: 200,
-                              child: Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.route_rounded, size: 48, color: Colors.grey),
-                                    SizedBox(height: 8),
-                                    Text('Пока нет поездок'),
-                                  ],
-                                ),
-                              ),
+              : CustomScrollView(
+                  slivers: [
+                    // Сворачивающийся заголовок
+                    SliverAppBar(
+                      expandedHeight: 180,
+                      pinned: true,
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      flexibleSpace: FlexibleSpaceBar(
+                        title: const Text('Мои поездки'),
+                        background: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.deepPurple, Colors.purple.shade800],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                             ),
-                          ],
-                        )
-                      : ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(8),
-                          itemCount: _trips.length,
-                          itemBuilder: (context, index) {
-                            final trip = _trips[index];
-                            return _TripCard(
-                              trip: trip,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TripDetailScreen(trip: trip),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 90),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.route_rounded, color: Colors.white70, size: 40),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${_totalKm.toStringAsFixed(1)} км · $_tripsCount поездок',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                );
-                              },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Icons.bar_chart_rounded),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const StatsScreen()),
                             );
                           },
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.admin_panel_settings_rounded),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_rounded),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                            );
+                            _loadData();
+                          },
+                        ),
+                      ],
+                    ),
+                    // Список поездок
+                    SliverPadding(
+                      padding: const EdgeInsets.all(8),
+                      sliver: _trips.isEmpty
+                          ? const SliverFillRemaining(
+                              child: Center(child: Text('Пока нет поездок')),
+                            )
+                          : SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final trip = _trips[index];
+                                  return _TripCard(
+                                    trip: trip,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => TripDetailScreen(trip: trip),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                childCount: _trips.length,
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final created = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateTripScreen()),
+          );
+          if (created == true) {
+            _loadData();
+          }
+        },
+        child: const Icon(Icons.add_rounded),
+      ),
     );
   }
 }
