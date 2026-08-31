@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
 import '../user_settings.dart';
 import '../active_trip_storage.dart';
+import '../notifications.dart';
 import 'create_trip_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
@@ -37,22 +37,7 @@ class _TripListScreenState extends State<TripListScreen> {
   Future<void> _checkActiveTripAndNotify() async {
     final activeTrip = await ActiveTripStorage.loadActiveTrip();
     if (activeTrip != null) {
-      const AndroidNotificationDetails androidPlatformChannelSpecifics =
-          AndroidNotificationDetails(
-        'active_trip_channel',
-        'Активные поездки',
-        channelDescription: 'Уведомления о незавершённых поездках',
-        importance: Importance.high,
-        priority: Priority.high,
-      );
-      const NotificationDetails platformChannelSpecifics =
-          NotificationDetails(android: androidPlatformChannelSpecifics);
-      await flutterLocalNotificationsPlugin.show(
-        0,
-        'Незавершённая поездка',
-        'У вас есть активная поездка. Завершите её или продолжайте.',
-        platformChannelSpecifics,
-      );
+      await showActiveTripNotification();
     }
   }
 
