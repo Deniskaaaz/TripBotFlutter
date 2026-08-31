@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
 import '../user_settings.dart';
+import '../active_trip_storage.dart';
 import 'create_trip_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
@@ -20,14 +22,38 @@ class _TripListScreenState extends State<TripListScreen> {
   bool _isLoading = true;
   String? _error;
 
-  // Данные для шапки
   int _tripsCount = 0;
   double _totalKm = 0.0;
+
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _checkActiveTripAndNotify();
+  }
+
+  Future<void> _checkActiveTripAndNotify() async {
+    final activeTrip = await ActiveTripStorage.loadActiveTrip();
+    if (activeTrip != null) {
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+        'active_trip_channel',
+        'Активные поездки',
+        channelDescription: 'Уведомления о незавершённых поездках',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+      const NotificationDetails platformChannelSpecifics =
+          NotificationDetails(android: androidPlatformChannelSpecifics);
+      await flutterLocalNotificationsPlugin.show(
+        0,
+        'Незавершённая поездка',
+        'У вас есть активная поездка. Завершите её или продолжайте.',
+        platformChannelSpecifics,
+      );
+    }
   }
 
   Future<void> _loadData() async {
@@ -57,6 +83,16 @@ class _TripListScreenState extends State<TripListScreen> {
     }
   }
 
+  List<Trip> get _filteredTrips {
+    if (_searchQuery.isEmpty) return _trips;
+    final query = _searchQuery.toLowerCase();
+    return _trips.where((trip) {
+      return trip.city.toLowerCase().contains(query) ||
+          trip.startPoint.toLowerCase().contains(query) ||
+          trip.endPoint.toLowerCase().contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,7 +117,6 @@ class _TripListScreenState extends State<TripListScreen> {
                 )
               : CustomScrollView(
                   slivers: [
-                    // Сворачивающийся заголовок
                     SliverAppBar(
                       expandedHeight: 180,
                       pinned: true,
@@ -89,6 +124,7 @@ class _TripListScreenState extends State<TripListScreen> {
                       foregroundColor: Colors.white,
                       flexibleSpace: FlexibleSpaceBar(
                         title: const Text('Мои поездки'),
+                        centerTitle: true,
                         background: Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -97,22 +133,25 @@ class _TripListScreenState extends State<TripListScreen> {
                               end: Alignment.bottomCenter,
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 90),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.route_rounded, color: Colors.white70, size: 40),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '${_totalKm.toStringAsFixed(1)} км · $_tripsCount поездок',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 60),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.route_rounded, color: Colors.white70, size: 40),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${_totalKm.toStringAsFixed(1)} км · $_tripsCount поездок',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -148,17 +187,41 @@ class _TripListScreenState extends State<TripListScreen> {
                         ),
                       ],
                     ),
-                    // Список поездок
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Поиск по городу или адресу',
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() => _searchQuery = '');
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() => _searchQuery = value);
+                          },
+                        ),
+                      ),
+                    ),
                     SliverPadding(
                       padding: const EdgeInsets.all(8),
-                      sliver: _trips.isEmpty
+                      sliver: _filteredTrips.isEmpty
                           ? const SliverFillRemaining(
-                              child: Center(child: Text('Пока нет поездок')),
+                              child: Center(child: Text('Ничего не найдено')),
                             )
                           : SliverList(
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
-                                  final trip = _trips[index];
+                                  final trip = _filteredTrips[index];
                                   return _TripCard(
                                     trip: trip,
                                     onTap: () {
@@ -171,7 +234,7 @@ class _TripListScreenState extends State<TripListScreen> {
                                     },
                                   );
                                 },
-                                childCount: _trips.length,
+                                childCount: _filteredTrips.length,
                               ),
                             ),
                     ),
