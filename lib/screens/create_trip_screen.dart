@@ -22,6 +22,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Duration _totalPauseDuration = Duration.zero;
   bool _isSaving = false;
   bool _isAddingPoint = false;
+  bool _isUpdatingGeometry = false;
   String _message = '';
 
   final _cityController = TextEditingController(text: 'Нижний Новгород');
@@ -62,6 +63,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           _mapZoom = 16;
         }
       });
+
+      // Если восстановили более одной точки, запросим геометрию
+      if (_points.length >= 2) {
+        await _updateRouteGeometry();
+      }
     }
   }
 
@@ -100,6 +106,46 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 
+  // Новый метод: обновляет геометрию маршрута на основе текущих точек
+  Future<void> _updateRouteGeometry() async {
+    if (_isUpdatingGeometry) return; // избегаем параллельных запросов
+    if (_points.length < 2) return;
+
+    setState(() {
+      _isUpdatingGeometry = true;
+      _message = 'Обновление маршрута...';
+    });
+
+    try {
+      final pointStrings = _points.map((p) => '${p.latitude},${p.longitude}').toList();
+      final result = await ApiService.calculateMultiRoute(
+        points: pointStrings,
+        city: _cityController.text.trim(),
+      );
+      final geometry = result['geometry'] as List<dynamic>?;
+      if (geometry != null) {
+        setState(() {
+          _routeGeometry = geometry.map((coord) {
+            if (coord is List && coord.length >= 2) {
+              final lat = (coord[0] as num).toDouble();
+              final lon = (coord[1] as num).toDouble();
+              return LatLng(lat, lon);
+            }
+            return null;
+          }).whereType<LatLng>().toList();
+        });
+      }
+    } catch (e) {
+      // Ошибка получения геометрии – оставляем прямые линии
+      print('Ошибка обновления геометрии: $e');
+    } finally {
+      setState(() {
+        _isUpdatingGeometry = false;
+        if (_message == 'Обновление маршрута...') _message = '';
+      });
+    }
+  }
+
   Future<void> _addCurrentLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -114,6 +160,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _message = 'Точка добавлена (${_points.length})';
       });
       await _saveActiveTrip();
+      if (_points.length >= 2) {
+        await _updateRouteGeometry();
+      }
     } catch (e) {
       setState(() => _message = 'Не удалось получить GPS: $e');
     }
@@ -149,6 +198,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _manualAddressController.clear();
       });
       await _saveActiveTrip();
+      if (_points.length >= 2) {
+        await _updateRouteGeometry();
+      }
     } catch (e) {
       setState(() => _message = 'Ошибка геокодирования: $e');
     } finally {
@@ -221,7 +273,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _routeGeometry = [];
       }
 
-      // Обратное геокодирование начальной и конечной точек
       String startAddress = pointStrings.first;
       String endAddress = pointStrings.last;
       try {
@@ -355,6 +406,9 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Определяем, какие точки использовать для полилинии на карте
+    final displayedPoints = _routeGeometry.isNotEmpty ? _routeGeometry : _points;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Активная поездка'),
@@ -402,11 +456,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     );
                   }).toList(),
                 ),
-                if (_points.length > 1)
+                if (displayedPoints.length > 1)
                   PolylineLayer(
                     polylines: [
                       Polyline(
-                        points: _points,
+                        points: displayedPoints,
                         strokeWidth: 4,
                         color: Colors.deepPurple,
                       ),
