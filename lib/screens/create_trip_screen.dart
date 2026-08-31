@@ -15,7 +15,7 @@ class CreateTripScreen extends StatefulWidget {
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
   final List<LatLng> _points = [];
-  List<LatLng> _routeGeometry = [];
+  List<LatLng> _routeGeometry = []; // реальная геометрия маршрута по дорогам
   bool _isTripActive = false;
   bool _isPaused = false;
   DateTime? _pauseStartTime;
@@ -202,6 +202,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         throw Exception('Некорректный ответ сервера');
       }
 
+      // Получаем геометрию маршрута, если сервер её вернул
       final geometry = routeResult['geometry'] as List<dynamic>?;
       if (geometry != null) {
         _routeGeometry = geometry.map((coord) {
@@ -230,6 +231,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
       final userId = await UserSettings.getUserId();
       final cost = await UserSettings.calculateTripCost(distanceKm);
+
+      // При сохранении используем геометрию маршрута, если она есть, иначе исходные точки
+      final pointsToSave = _routeGeometry.isNotEmpty
+          ? _routeGeometry.map((p) => '${p.latitude},${p.longitude}').toList()
+          : pointStrings;
+
       final success = await ApiService.saveTrip(
         userId: userId,
         city: _cityController.text.trim(),
@@ -239,11 +246,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         totalDurationSec: durationSec,
         totalPauseSec: _totalPauseDuration.inSeconds,
         totalCost: cost,
-        points: pointStrings,
+        points: pointsToSave,
       );
       if (success) {
         await ActiveTripStorage.clearActiveTrip();
-        _showSummaryDialog(distanceKm, durationSec, cost, _routeGeometry.isNotEmpty ? _routeGeometry : _points);
+        _showSummaryDialog(
+          distanceKm,
+          durationSec,
+          cost,
+          _routeGeometry.isNotEmpty ? _routeGeometry : _points,
+        );
       }
     } catch (e) {
       setState(() {
@@ -256,7 +268,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
   }
 
-  void _showSummaryDialog(double distanceKm, int durationSec, double cost, List<LatLng> routePoints) {
+  void _showSummaryDialog(
+      double distanceKm, int durationSec, double cost, List<LatLng> routePoints) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
