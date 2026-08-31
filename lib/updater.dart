@@ -3,9 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
 
 class Updater {
   static const String repoOwner = 'Deniskaaaz';
@@ -95,17 +94,14 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Запускаем установку APK через AndroidIntent с FileProvider
-      final intent = AndroidIntent(
-        action: 'android.intent.action.VIEW',
-        data: file.path,
+      // Открываем APK с явным MIME-типом
+      final result = await OpenFilex.open(
+        file.path,
         type: 'application/vnd.android.package-archive',
-        flags: [Flag.FLAG_GRANT_READ_URI_PERMISSION, Flag.FLAG_ACTIVITY_NEW_TASK],
-        arguments: {
-          'android.intent.extra.NOT_UNKNOWN_SOURCE': true,
-        },
       );
-      await intent.launch();
+      if (result.type != ResultType.done) {
+        _showError(context, 'Не удалось открыть APK: ${result.message}');
+      }
     } catch (e) {
       _showError(context, 'Не удалось установить: $e');
     }
