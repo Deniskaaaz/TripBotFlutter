@@ -15,7 +15,7 @@ class CreateTripScreen extends StatefulWidget {
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
   final List<LatLng> _points = [];
-  List<LatLng> _routeGeometry = []; // реальная геометрия маршрута по дорогам
+  List<LatLng> _routeGeometry = [];
   bool _isTripActive = false;
   bool _isPaused = false;
   DateTime? _pauseStartTime;
@@ -57,7 +57,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _isPaused = saved['isPaused'] as bool? ?? false;
         _pauseStartTime = saved['pauseStartTime'] as DateTime?;
         _isTripActive = _points.isNotEmpty;
-        if (_points.isNotEmpty) _mapCenter = _points.last;
+        if (_points.isNotEmpty) {
+          _mapCenter = _points.last;
+          _mapZoom = 16;
+        }
       });
     }
   }
@@ -107,6 +110,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
         _mapCenter = latLng;
+        _mapZoom = 16;
         _message = 'Точка добавлена (${_points.length})';
       });
       await _saveActiveTrip();
@@ -140,6 +144,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
         _mapCenter = latLng;
+        _mapZoom = 16;
         _message = 'Адрес добавлен (${_points.length})';
         _manualAddressController.clear();
       });
@@ -202,7 +207,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         throw Exception('Некорректный ответ сервера');
       }
 
-      // Получаем геометрию маршрута, если сервер её вернул
       final geometry = routeResult['geometry'] as List<dynamic>?;
       if (geometry != null) {
         _routeGeometry = geometry.map((coord) {
@@ -232,7 +236,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       final userId = await UserSettings.getUserId();
       final cost = await UserSettings.calculateTripCost(distanceKm);
 
-      // При сохранении используем геометрию маршрута, если она есть, иначе исходные точки
       final pointsToSave = _routeGeometry.isNotEmpty
           ? _routeGeometry.map((p) => '${p.latitude},${p.longitude}').toList()
           : pointStrings;
