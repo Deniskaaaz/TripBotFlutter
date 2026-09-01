@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../cached_tile_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -39,14 +39,14 @@ class TripDetailScreen extends StatelessWidget {
     final durationHours = trip.totalDurationSec ~/ 3600;
     final durationMinutes = (trip.totalDurationSec % 3600) ~/ 60;
     final durationText = durationHours > 0
-        ? '${durationHours} ч ${durationMinutes} мин'
-        : '${durationMinutes} мин';
+        ? '${durationHours} С‡ ${durationMinutes} РјРёРЅ'
+        : '${durationMinutes} РјРёРЅ';
 
     final pauseMinutes = trip.totalPauseSec ~/ 60;
-    final pauseText = pauseMinutes > 0 ? '$pauseMinutes мин' : 'Нет';
+    final pauseText = pauseMinutes > 0 ? '$pauseMinutes РјРёРЅ' : 'РќРµС‚';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Детали поездки')),
+      appBar: AppBar(title: const Text('Р”РµС‚Р°Р»Рё РїРѕРµР·РґРєРё')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -117,9 +117,9 @@ class TripDetailScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _InfoRow(icon: Icons.trip_origin, label: 'Начальная точка', value: trip.startPoint),
+                    _InfoRow(icon: Icons.trip_origin, label: 'РќР°С‡Р°Р»СЊРЅР°СЏ С‚РѕС‡РєР°', value: trip.startPoint),
                     const SizedBox(height: 8),
-                    _InfoRow(icon: Icons.place, label: 'Конечная точка', value: trip.endPoint),
+                    _InfoRow(icon: Icons.place, label: 'РљРѕРЅРµС‡РЅР°СЏ С‚РѕС‡РєР°', value: trip.endPoint),
                   ],
                 ),
               ),
@@ -132,16 +132,16 @@ class TripDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    _InfoRow(icon: Icons.straighten, label: 'Дистанция', value: '${trip.totalKm.toStringAsFixed(1)} км'),
+                    _InfoRow(icon: Icons.straighten, label: 'Р”РёСЃС‚Р°РЅС†РёСЏ', value: '${trip.totalKm.toStringAsFixed(1)} РєРј'),
                     const SizedBox(height: 8),
-                    _InfoRow(icon: Icons.timer, label: 'Время в пути', value: durationText),
+                    _InfoRow(icon: Icons.timer, label: 'Р’СЂРµРјСЏ РІ РїСѓС‚Рё', value: durationText),
                     const SizedBox(height: 8),
-                    _InfoRow(icon: Icons.pause_circle_outline, label: 'Пауза', value: pauseText),
+                    _InfoRow(icon: Icons.pause_circle_outline, label: 'РџР°СѓР·Р°', value: pauseText),
                     const SizedBox(height: 8),
                     _InfoRow(
                       icon: Icons.attach_money,
-                      label: 'Стоимость',
-                      value: trip.totalCost > 0 ? '${trip.totalCost.toStringAsFixed(2)} ₽' : 'Не указана',
+                      label: 'РЎС‚РѕРёРјРѕСЃС‚СЊ',
+                      value: trip.totalCost > 0 ? '${trip.totalCost.toStringAsFixed(2)} в‚Ѕ' : 'РќРµ СѓРєР°Р·Р°РЅР°',
                     ),
                   ],
                 ),
@@ -155,7 +155,7 @@ class TripDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: _InfoRow(
                   icon: Icons.calendar_today,
-                  label: 'Дата и время',
+                  label: 'Р”Р°С‚Р° Рё РІСЂРµРјСЏ',
                   value: _formatTimestamp(trip.timestamp),
                 ),
               ),
@@ -195,6 +195,7 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
 
 
 

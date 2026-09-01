@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../cached_tile_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -98,11 +98,11 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Все поездки на карте')),
+      appBar: AppBar(title: const Text('Р’СЃРµ РїРѕРµР·РґРєРё РЅР° РєР°СЂС‚Рµ')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text('Ошибка: $_error'))
+              ? Center(child: Text('РћС€РёР±РєР°: $_error'))
               : FlutterMap(
                   options: MapOptions(
                     initialCenter: _polylines.isNotEmpty
@@ -124,6 +124,7 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
     );
   }
 }
+
 
 
 

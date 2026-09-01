@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../cached_tile_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -29,7 +29,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   bool _isUpdatingGeometry = false;
   String _message = '';
 
-  final _cityController = TextEditingController(text: 'Нижний Новгород');
+  final _cityController = TextEditingController(text: 'РќРёР¶РЅРёР№ РќРѕРІРіРѕСЂРѕРґ');
   final _addressController = TextEditingController();
   List<String> _addressSuggestions = [];
 
@@ -79,19 +79,19 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      setState(() => _message = 'Службы геолокации отключены');
+      setState(() => _message = 'РЎР»СѓР¶Р±С‹ РіРµРѕР»РѕРєР°С†РёРё РѕС‚РєР»СЋС‡РµРЅС‹');
       return;
     }
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        setState(() => _message = 'Разрешение на геолокацию отклонено');
+        setState(() => _message = 'Р Р°Р·СЂРµС€РµРЅРёРµ РЅР° РіРµРѕР»РѕРєР°С†РёСЋ РѕС‚РєР»РѕРЅРµРЅРѕ');
         return;
       }
     }
     if (permission == LocationPermission.deniedForever) {
-      setState(() => _message = 'Разрешение на геолокацию отключено навсегда');
+      setState(() => _message = 'Р Р°Р·СЂРµС€РµРЅРёРµ РЅР° РіРµРѕР»РѕРєР°С†РёСЋ РѕС‚РєР»СЋС‡РµРЅРѕ РЅР°РІСЃРµРіРґР°');
     }
   }
 
@@ -116,7 +116,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     setState(() {
       _isUpdatingGeometry = true;
-      _message = 'Обновление маршрута...';
+      _message = 'РћР±РЅРѕРІР»РµРЅРёРµ РјР°СЂС€СЂСѓС‚Р°...';
     });
 
     try {
@@ -139,11 +139,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         });
       }
     } catch (e) {
-      print('Ошибка обновления геометрии: $e');
+      print('РћС€РёР±РєР° РѕР±РЅРѕРІР»РµРЅРёСЏ РіРµРѕРјРµС‚СЂРёРё: $e');
     } finally {
       setState(() {
         _isUpdatingGeometry = false;
-        if (_message == 'Обновление маршрута...') _message = '';
+        if (_message == 'РћР±РЅРѕРІР»РµРЅРёРµ РјР°СЂС€СЂСѓС‚Р°...') _message = '';
       });
     }
   }
@@ -158,7 +158,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
         if (_points.length == 1) _tripStartTime = DateTime.now();
-        _message = 'Точка добавлена (${_points.length})';
+        _message = 'РўРѕС‡РєР° РґРѕР±Р°РІР»РµРЅР° (${_points.length})';
       });
       _mapController.move(latLng, 16);
       await _saveActiveTrip();
@@ -166,7 +166,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         await _updateRouteGeometry();
       }
     } catch (e) {
-      setState(() => _message = 'Не удалось получить GPS: $e');
+      setState(() => _message = 'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ GPS: $e');
     }
   }
 
@@ -175,7 +175,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     setState(() => _addressSuggestions = []);
     setState(() {
       _isAddingPoint = true;
-      _message = 'Геокодирование...';
+      _message = 'Р“РµРѕРєРѕРґРёСЂРѕРІР°РЅРёРµ...';
     });
     try {
       final result = await ApiService.geocodeAddress(
@@ -185,14 +185,14 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       final lat = result['lat'] as double?;
       final lon = result['lon'] as double?;
       if (lat == null || lon == null) {
-        throw Exception('Координаты не найдены');
+        throw Exception('РљРѕРѕСЂРґРёРЅР°С‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹');
       }
       final latLng = LatLng(lat, lon);
       setState(() {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
         if (_points.length == 1) _tripStartTime = DateTime.now();
-        _message = 'Адрес добавлен (${_points.length})';
+        _message = 'РђРґСЂРµСЃ РґРѕР±Р°РІР»РµРЅ (${_points.length})';
         _addressController.clear();
       });
       _mapController.move(latLng, 16);
@@ -201,7 +201,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         await _updateRouteGeometry();
       }
     } catch (e) {
-      setState(() => _message = 'Ошибка геокодирования: $e');
+      setState(() => _message = 'РћС€РёР±РєР° РіРµРѕРєРѕРґРёСЂРѕРІР°РЅРёСЏ: $e');
     } finally {
       setState(() => _isAddingPoint = false);
     }
@@ -225,7 +225,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   void _togglePause() {
     if (!_isTripActive) {
-      setState(() => _message = 'Поездка не начата');
+      setState(() => _message = 'РџРѕРµР·РґРєР° РЅРµ РЅР°С‡Р°С‚Р°');
       return;
     }
     if (_isPaused) {
@@ -235,7 +235,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         setState(() {
           _isPaused = false;
           _pauseStartTime = null;
-          _message = 'Поездка продолжена';
+          _message = 'РџРѕРµР·РґРєР° РїСЂРѕРґРѕР»Р¶РµРЅР°';
         });
         _saveActiveTrip();
       }
@@ -243,7 +243,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _isPaused = true;
         _pauseStartTime = DateTime.now();
-        _message = 'Пауза начата';
+        _message = 'РџР°СѓР·Р° РЅР°С‡Р°С‚Р°';
       });
       _saveActiveTrip();
     }
@@ -251,7 +251,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   Future<void> _finishTrip() async {
     if (_points.length < 2) {
-      setState(() => _message = 'Нужно минимум две точки');
+      setState(() => _message = 'РќСѓР¶РЅРѕ РјРёРЅРёРјСѓРј РґРІРµ С‚РѕС‡РєРё');
       return;
     }
     if (_isPaused) _togglePause();
@@ -261,7 +261,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     setState(() {
       _isSaving = true;
-      _message = hasInternet ? 'Расчёт маршрута...' : 'Нет сети. Поездка будет сохранена локально.';
+      _message = hasInternet ? 'Р Р°СЃС‡С‘С‚ РјР°СЂС€СЂСѓС‚Р°...' : 'РќРµС‚ СЃРµС‚Рё. РџРѕРµР·РґРєР° Р±СѓРґРµС‚ СЃРѕС…СЂР°РЅРµРЅР° Р»РѕРєР°Р»СЊРЅРѕ.';
     });
 
     try {
@@ -292,7 +292,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         await ActiveTripStorage.clearActiveTrip();
         setState(() {
           _isSaving = false;
-          _message = 'Поездка сохранена локально. Она будет отправлена при подключении к интернету.';
+          _message = 'РџРѕРµР·РґРєР° СЃРѕС…СЂР°РЅРµРЅР° Р»РѕРєР°Р»СЊРЅРѕ. РћРЅР° Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅР° РїСЂРё РїРѕРґРєР»СЋС‡РµРЅРёРё Рє РёРЅС‚РµСЂРЅРµС‚Сѓ.';
         });
         Navigator.pop(context, true);
         return;
@@ -305,7 +305,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       final distanceKm = routeResult['distance_km'] as double?;
       final durationSec = routeResult['duration_sec'] as int?;
       if (distanceKm == null || durationSec == null) {
-        throw Exception('Некорректный ответ сервера');
+        throw Exception('РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РѕС‚РІРµС‚ СЃРµСЂРІРµСЂР°');
       }
 
       final geometry = routeResult['geometry'] as List<dynamic>?;
@@ -360,7 +360,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         );
       }
     } catch (e) {
-      setState(() => _message = 'Ошибка сохранения: $e');
+      setState(() => _message = 'РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ: $e');
     } finally {
       setState(() => _isSaving = false);
     }
@@ -371,7 +371,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Поездка завершена'),
+        title: const Text('РџРѕРµР·РґРєР° Р·Р°РІРµСЂС€РµРЅР°'),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -418,11 +418,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Text('Дистанция: ${distanceKm.toStringAsFixed(1)} км'),
-              Text('Время: ${(durationSec / 60).round()} мин'),
-              Text('Стоимость: ${cost.toStringAsFixed(2)} ₽'),
+              Text('Р”РёСЃС‚Р°РЅС†РёСЏ: ${distanceKm.toStringAsFixed(1)} РєРј'),
+              Text('Р’СЂРµРјСЏ: ${(durationSec / 60).round()} РјРёРЅ'),
+              Text('РЎС‚РѕРёРјРѕСЃС‚СЊ: ${cost.toStringAsFixed(2)} в‚Ѕ'),
               if (_totalPauseDuration.inSeconds > 0)
-                Text('Пауза: ${_totalPauseDuration.inMinutes} мин'),
+                Text('РџР°СѓР·Р°: ${_totalPauseDuration.inMinutes} РјРёРЅ'),
             ],
           ),
         ),
@@ -432,7 +432,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               Navigator.of(ctx).pop();
               Navigator.of(context).pop(true);
             },
-            child: const Text('Готово'),
+            child: const Text('Р“РѕС‚РѕРІРѕ'),
           ),
         ],
       ),
@@ -452,7 +452,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Активная поездка'),
+        title: const Text('РђРєС‚РёРІРЅР°СЏ РїРѕРµР·РґРєР°'),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -466,7 +466,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 _isPaused = false;
                 _pauseStartTime = null;
                 _tripStartTime = null;
-                _message = 'Черновик поездки удалён';
+                _message = 'Р§РµСЂРЅРѕРІРёРє РїРѕРµР·РґРєРё СѓРґР°Р»С‘РЅ';
               });
             },
           ),
@@ -523,12 +523,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 children: [
                   TextField(
                     controller: _cityController,
-                    decoration: const InputDecoration(labelText: 'Город'),
+                    decoration: const InputDecoration(labelText: 'Р“РѕСЂРѕРґ'),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: _addressController,
-                    decoration: const InputDecoration(labelText: 'Адрес (начните вводить)'),
+                    decoration: const InputDecoration(labelText: 'РђРґСЂРµСЃ (РЅР°С‡РЅРёС‚Рµ РІРІРѕРґРёС‚СЊ)'),
                     onChanged: _fetchAddressSuggestions,
                   ),
                   if (_addressSuggestions.isNotEmpty)
@@ -559,7 +559,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isTripActive ? null : _addCurrentLocation,
                           icon: const Icon(Icons.my_location_rounded),
-                          label: const Text('Начать'),
+                          label: const Text('РќР°С‡Р°С‚СЊ'),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -567,7 +567,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isTripActive ? _addCurrentLocation : null,
                           icon: const Icon(Icons.gps_fixed_rounded),
-                          label: const Text('Я на адресе'),
+                          label: const Text('РЇ РЅР° Р°РґСЂРµСЃРµ'),
                         ),
                       ),
                     ],
@@ -579,7 +579,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isTripActive ? _togglePause : null,
                           icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
-                          label: Text(_isPaused ? 'Продолжить' : 'Пауза'),
+                          label: Text(_isPaused ? 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ' : 'РџР°СѓР·Р°'),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -587,15 +587,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isTripActive && !_isSaving ? _finishTrip : null,
                           icon: const Icon(Icons.check_rounded),
-                          label: const Text('Завершить'),
+                          label: const Text('Р—Р°РІРµСЂС€РёС‚СЊ'),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text('Точек: ${_points.length}', style: const TextStyle(fontSize: 16)),
+                  Text('РўРѕС‡РµРє: ${_points.length}', style: const TextStyle(fontSize: 16)),
                   if (_totalPauseDuration.inSeconds > 0)
-                    Text('Пауза: ${_totalPauseDuration.inMinutes} мин'),
+                    Text('РџР°СѓР·Р°: ${_totalPauseDuration.inMinutes} РјРёРЅ'),
                   if (_message.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -614,6 +614,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 }
+
 
 
 
