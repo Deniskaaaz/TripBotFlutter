@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:install_plugin/install_plugin.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 
 class Updater {
   static const String repoOwner = 'Deniskaaaz';
   static const String repoName = 'TripBotFlutter';
+  static const String _fileProviderAuthority = 'com.tripbot.trip_bot_app.fileprovider';
 
   static Future<void> checkForUpdate(BuildContext context) async {
     try {
@@ -94,8 +96,17 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Установка APK через install_plugin (обрабатывает FileProvider)
-      await InstallPlugin.install(file.path);
+      // Формируем content URI для FileProvider
+      final contentUri = 'content://$_fileProviderAuthority/cache/update.apk';
+
+      final intent = AndroidIntent(
+        action: 'android.intent.action.VIEW',
+        data: contentUri,
+        type: 'application/vnd.android.package-archive',
+        flags: [Flag.FLAG_GRANT_READ_URI_PERMISSION, Flag.FLAG_ACTIVITY_NEW_TASK],
+      );
+
+      await intent.launch();
     } catch (e) {
       _showError(context, 'Не удалось установить: $e');
     }

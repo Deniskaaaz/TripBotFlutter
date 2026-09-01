@@ -9,7 +9,7 @@ import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'trip_detail_screen.dart';
 import 'admin_login_screen.dart';
-import 'all_trips_map_screen.dart'; // новый импорт
+import 'all_trips_map_screen.dart';
 
 class TripListScreen extends StatefulWidget {
   const TripListScreen({Key? key}) : super(key: key);
@@ -101,143 +101,175 @@ class _TripListScreenState extends State<TripListScreen> {
                     ],
                   ),
                 )
-              : CustomScrollView(
-                  slivers: [
-                    SliverAppBar(
-                      expandedHeight: 180,
-                      pinned: true,
-                      backgroundColor: Colors.deepPurple,
-                      foregroundColor: Colors.white,
-                      flexibleSpace: FlexibleSpaceBar(
-                        title: const Text('Мои поездки'),
-                        // centerTitle не указан, заголовок слева
-                        background: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.deepPurple, Colors.purple.shade800],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
+              : RefreshIndicator(
+                  onRefresh: _loadData,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverAppBar(
+                        expandedHeight: 180,
+                        pinned: true,
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        flexibleSpace: FlexibleSpaceBar(
+                          title: const Text('Мои поездки'),
+                          // Заголовок слева, места теперь достаточно
+                          background: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.deepPurple, Colors.purple.shade800],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
                             ),
-                          ),
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 60),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.route_rounded, color: Colors.white70, size: 40),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${_totalKm.toStringAsFixed(1)} км · $_tripsCount поездок',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 60),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.route_rounded, color: Colors.white70, size: 40),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_totalKm.toStringAsFixed(1)} км · $_tripsCount поездок',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.bar_chart_rounded),
-                          tooltip: 'Статистика',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const StatsScreen()),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.map_outlined),
-                          tooltip: 'Все поездки на карте',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const AllTripsMapScreen()),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.admin_panel_settings_rounded),
-                          tooltip: 'Админ-панель',
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.settings_rounded),
-                          tooltip: 'Настройки',
-                          onPressed: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                            );
-                            _loadData();
-                          },
-                        ),
-                      ],
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Поиск по городу или адресу',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      setState(() => _searchQuery = '');
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() => _searchQuery = value);
-                          },
-                        ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.all(8),
-                      sliver: _filteredTrips.isEmpty
-                          ? const SliverFillRemaining(
-                              child: Center(child: Text('Ничего не найдено')),
-                            )
-                          : SliverList(
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final trip = _filteredTrips[index];
-                                  return _TripCard(
-                                    trip: trip,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => TripDetailScreen(trip: trip),
-                                        ),
-                                      );
-                                    },
+                        actions: [
+                          // Выпадающее меню
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert),
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'stats':
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const StatsScreen()),
                                   );
-                                },
-                                childCount: _filteredTrips.length,
+                                  break;
+                                case 'map':
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const AllTripsMapScreen()),
+                                  );
+                                  break;
+                                case 'admin':
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+                                  );
+                                  break;
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'stats',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.bar_chart_rounded, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Статистика'),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'map',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.map_outlined, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Все поездки на карте'),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuItem(
+                                value: 'admin',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.admin_panel_settings_rounded, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Админ-панель'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.settings_rounded),
+                            tooltip: 'Настройки',
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                              );
+                              _loadData();
+                            },
+                          ),
+                        ],
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Поиск по городу или адресу',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        setState(() => _searchQuery = '');
+                                      },
+                                    )
+                                  : null,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                    ),
-                  ],
+                            onChanged: (value) {
+                              setState(() => _searchQuery = value);
+                            },
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.all(8),
+                        sliver: _filteredTrips.isEmpty
+                            ? const SliverFillRemaining(
+                                child: Center(child: Text('Ничего не найдено')),
+                              )
+                            : SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final trip = _filteredTrips[index];
+                                    return _TripCard(
+                                      trip: trip,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => TripDetailScreen(trip: trip),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  childCount: _filteredTrips.length,
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {

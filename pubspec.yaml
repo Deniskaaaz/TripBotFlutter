@@ -19,7 +19,7 @@ dependencies:
   latlong2: ^0.9.1
   geolocator: ^10.1.0
   flutter_local_notifications: ^17.0.0
-  install_plugin: ^2.1.0
+  android_intent_plus: ^5.0.2
 
 dev_dependencies:
   flutter_test:
