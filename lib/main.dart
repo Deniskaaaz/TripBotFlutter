@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart'; // добавлен
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'screens/trip_list_screen.dart';
 import 'screens/create_trip_screen.dart';
 import 'updater.dart';
