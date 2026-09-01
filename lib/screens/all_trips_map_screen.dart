@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
 import '../user_settings.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
 class AllTripsMapScreen extends StatefulWidget {
   const AllTripsMapScreen({Key? key}) : super(key: key);
@@ -114,10 +115,11 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
                     zoom: 10,
                   ),
                   children: [
-                    TileLayer(
+                    CachedTileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
+					  maxZoom: 19,
                     ),
                     PolylineLayer(
                       polylines: _polylines,

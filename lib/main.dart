@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'screens/trip_list_screen.dart';
 import 'screens/create_trip_screen.dart';
 import 'updater.dart';
@@ -14,17 +15,12 @@ void main() async {
       MaterialPageRoute(builder: (context) => const CreateTripScreen()),
     );
   });
+  await FlutterMapTileCaching.initialise(); // <-- добавлено
 
-  // При появлении сети пытаемся синхронизировать офлайн-поездки
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();
-    if (synced > 0) {
-      // Здесь можно показать уведомление или обновить UI, но пока просто логируем
-      debugPrint('Синхронизировано поездок: $synced');
-    }
+    if (synced > 0) debugPrint('Синхронизировано поездок: $synced');
   });
-
-  // Синхронизируем при старте приложения (если есть сеть)
   await OfflineSyncService.syncPendingTrips();
 
   runApp(const MyApp());

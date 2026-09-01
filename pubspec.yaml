@@ -1,7 +1,7 @@
 name: trip_bot_app
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.1.2+12
+version: 1.1.4+14
 
 environment:
   sdk: ^3.13.2
@@ -21,6 +21,7 @@ dependencies:
   flutter_local_notifications: ^17.0.0
   connectivity_plus: ^6.1.0
   android_intent_plus: ^5.0.2
+  flutter_map_tile_caching: ^9.0.0
 
 dev_dependencies:
   flutter_test:

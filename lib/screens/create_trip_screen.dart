@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import '../api_service.dart';
 import '../user_settings.dart';
 import '../active_trip_storage.dart';
@@ -397,10 +398,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     zoom: 12,
                   ),
                   children: [
-                    TileLayer(
+                    CachedTileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
+					  maxZoom: 19,
                     ),
                     MarkerLayer(
                       markers: [

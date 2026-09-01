@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 
 class TripDetailScreen extends StatelessWidget {
   final Trip trip;
@@ -71,10 +72,11 @@ class TripDetailScreen extends StatelessWidget {
                       zoom: 12,
                     ),
                     children: [
-                      TileLayer(
+                      CachedTileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
                         userAgentPackageName: 'com.tripbot.trip_bot_app',
+						maxZoom: 19,
                       ),
                       MarkerLayer(
                         markers: [
