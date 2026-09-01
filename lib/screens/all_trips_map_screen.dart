@@ -105,16 +105,16 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
               ? Center(child: Text('Ошибка: $_error'))
               : FlutterMap(
                   options: MapOptions(
-                    initialCenter: _polylines.isNotEmpty
+                    center: _polylines.isNotEmpty
                         ? _polylines.first.points.first
                         : const LatLng(56.3269, 44.0075),
-                    initialZoom: 10,
+                    zoom: 10,
                   ),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                      tileProvider: StorageTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
                     PolylineLayer(polylines: _polylines),
@@ -124,3 +124,4 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
     );
   }
 }
+

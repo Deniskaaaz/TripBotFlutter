@@ -16,9 +16,7 @@ void main() async {
     );
   });
 
-  // Инициализация кэша карты
-  final backend = FMTCObjectBoxBackend();
-  await backend.initialise();
+  await FlutterMapTileCaching.initialise();
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();

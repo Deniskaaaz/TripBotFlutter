@@ -380,12 +380,12 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               SizedBox(
                 height: 200,
                 child: FlutterMap(
-                  options: MapOptions(initialCenter: routePoints.first, initialZoom: 12),
+                  options: MapOptions(center: routePoints.first, zoom: 12),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                      tileProvider: StorageTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
                     MarkerLayer(
@@ -480,16 +480,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _points.isNotEmpty
+                center: _points.isNotEmpty
                     ? _points.last
                     : const LatLng(56.3269, 44.0075),
-                initialZoom: _points.isNotEmpty ? 16 : 12,
+                zoom: _points.isNotEmpty ? 16 : 12,
               ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   subdomains: const ['a', 'b', 'c'],
-                  tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                  tileProvider: StorageTileProvider(),
                   userAgentPackageName: 'com.tripbot.trip_bot_app',
                 ),
                 MarkerLayer(
@@ -614,3 +614,4 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 }
+
