@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../cached_tile_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
@@ -65,7 +66,7 @@ class TripDetailScreen extends StatelessWidget {
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
-                        tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                        tileProvider: CachedTileProvider(),
                         userAgentPackageName: 'com.tripbot.trip_bot_app',
                       ),
                       MarkerLayer(
@@ -195,5 +196,6 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+
 
 

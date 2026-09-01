@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../cached_tile_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
@@ -385,7 +386,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                      tileProvider: CachedTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
                     MarkerLayer(
@@ -489,7 +490,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 TileLayer(
                   urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   subdomains: const ['a', 'b', 'c'],
-                  tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
+                  tileProvider: CachedTileProvider(),
                   userAgentPackageName: 'com.tripbot.trip_bot_app',
                 ),
                 MarkerLayer(
@@ -614,5 +615,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     );
   }
 }
+
 
 
