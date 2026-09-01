@@ -391,11 +391,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     zoom: 12,
                   ),
                   children: [
-                    CachedTileLayer(
+                    TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
+                      tileProvider: StorageTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
-                      maxZoom: 19,
                     ),
                     MarkerLayer(
                       markers: [

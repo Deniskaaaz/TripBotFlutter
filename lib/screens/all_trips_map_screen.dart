@@ -111,11 +111,11 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
                     zoom: 10,
                   ),
                   children: [
-                    CachedTileLayer(
+                    TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
+                      tileProvider: StorageTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
-                      maxZoom: 19,
                     ),
                     PolylineLayer(polylines: _polylines),
                     MarkerLayer(markers: _markers),
