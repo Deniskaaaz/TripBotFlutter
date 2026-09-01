@@ -380,7 +380,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               SizedBox(
                 height: 200,
                 child: FlutterMap(
-                  options: MapOptions(initialinitialCenter: routePoints.first, initialinitialZoom: 12),
+                  options: MapOptions(initialCenter: routePoints.first, initialZoom: 12),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -480,10 +480,10 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialinitialCenter: _points.isNotEmpty
+                initialCenter: _points.isNotEmpty
                     ? _points.last
                     : const LatLng(56.3269, 44.0075),
-                initialinitialZoom: _points.isNotEmpty ? 16 : 12,
+                initialZoom: _points.isNotEmpty ? 16 : 12,
               ),
               children: [
                 TileLayer(
