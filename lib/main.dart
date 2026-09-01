@@ -15,7 +15,10 @@ void main() async {
       MaterialPageRoute(builder: (context) => const CreateTripScreen()),
     );
   });
-  await TileCaching.initialise();  // правильный вызов
+
+  // Инициализация кэша карты
+  final backend = FMTCObjectBoxBackend();
+  await backend.initialise();
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();

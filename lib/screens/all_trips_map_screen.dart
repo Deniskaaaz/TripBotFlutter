@@ -108,13 +108,13 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
                     initialCenter: _polylines.isNotEmpty
                         ? _polylines.first.points.first
                         : const LatLng(56.3269, 44.0075),
-                    zoom: 10,
+                    initialZoom: 10,
                   ),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      tileProvider: CachedTileProvider(),
+                      tileProvider: FMTCTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
                     PolylineLayer(polylines: _polylines),

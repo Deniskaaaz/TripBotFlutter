@@ -380,15 +380,40 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               SizedBox(
                 height: 200,
                 child: FlutterMap(
-                  options: MapOptions(center: routePoints.first, zoom: 12),
+                  options: MapOptions(initialCenter: routePoints.first, initialZoom: 12),
                   children: [
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      tileProvider: CachedTileProvider(),
+                      tileProvider: FMTCTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
-                    // ... маркеры и полилинии ...
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: routePoints.first,
+                          width: 40,
+                          height: 40,
+                          child: const Icon(Icons.trip_origin, color: Colors.green, size: 40),
+                        ),
+                        if (routePoints.length > 1)
+                          Marker(
+                            point: routePoints.last,
+                            width: 40,
+                            height: 40,
+                            child: const Icon(Icons.place, color: Colors.red, size: 40),
+                          ),
+                      ],
+                    ),
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: routePoints,
+                          strokeWidth: 4,
+                          color: Colors.deepPurple,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -455,14 +480,16 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
             child: FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                center: _points.isNotEmpty ? _points.last : const LatLng(56.3269, 44.0075),
-                zoom: _points.isNotEmpty ? 16 : 12,
+                initialCenter: _points.isNotEmpty
+                    ? _points.last
+                    : const LatLng(56.3269, 44.0075),
+                initialZoom: _points.isNotEmpty ? 16 : 12,
               ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                   subdomains: const ['a', 'b', 'c'],
-                  tileProvider: CachedTileProvider(),
+                  tileProvider: FMTCTileProvider(),
                   userAgentPackageName: 'com.tripbot.trip_bot_app',
                 ),
                 MarkerLayer(
@@ -488,7 +515,100 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               ],
             ),
           ),
-          // остальная часть UI без изменений (как в предыдущем полном коде)
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(labelText: 'Город'),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(labelText: 'Адрес (начните вводить)'),
+                    onChanged: _fetchAddressSuggestions,
+                  ),
+                  if (_addressSuggestions.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: _addressSuggestions.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final suggestion = _addressSuggestions[index];
+                          return ListTile(
+                            dense: true,
+                            title: Text(suggestion),
+                            onTap: () => _addAddressFromSuggestion(suggestion),
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTripActive ? null : _addCurrentLocation,
+                          icon: const Icon(Icons.my_location_rounded),
+                          label: const Text('Начать'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTripActive ? _addCurrentLocation : null,
+                          icon: const Icon(Icons.gps_fixed_rounded),
+                          label: const Text('Я на адресе'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTripActive ? _togglePause : null,
+                          icon: Icon(_isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
+                          label: Text(_isPaused ? 'Продолжить' : 'Пауза'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTripActive && !_isSaving ? _finishTrip : null,
+                          icon: const Icon(Icons.check_rounded),
+                          label: const Text('Завершить'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Точек: ${_points.length}', style: const TextStyle(fontSize: 16)),
+                  if (_totalPauseDuration.inSeconds > 0)
+                    Text('Пауза: ${_totalPauseDuration.inMinutes} мин'),
+                  if (_message.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        _message,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -60,12 +60,12 @@ class TripDetailScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 250,
                   child: FlutterMap(
-                    options: MapOptions(initialCenter: points.first, zoom: 12),
+                    options: MapOptions(initialCenter: points.first, initialZoom: 12),
                     children: [
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
-                        tileProvider: CachedTileProvider(),
+                        tileProvider: FMTCTileProvider(),
                         userAgentPackageName: 'com.tripbot.trip_bot_app',
                       ),
                       MarkerLayer(
