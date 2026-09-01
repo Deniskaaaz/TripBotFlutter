@@ -96,7 +96,6 @@ class Updater {
 
       await file.writeAsBytes(response.bodyBytes);
 
-      // Формируем content URI для FileProvider
       final contentUri = 'content://$_fileProviderAuthority/cache/update.apk';
 
       final intent = AndroidIntent(

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../api_service.dart';
 import '../user_settings.dart';
 import '../active_trip_storage.dart';
+import '../offline_sync_service.dart';
 
 class CreateTripScreen extends StatefulWidget {
   const CreateTripScreen({Key? key}) : super(key: key);
@@ -166,7 +168,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Future<void> _addAddressFromSuggestion(String address) async {
     _addressController.text = address;
     setState(() => _addressSuggestions = []);
-    // Геокодируем выбранный адрес
     setState(() {
       _isAddingPoint = true;
       _message = 'Геокодирование...';
@@ -250,13 +251,45 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     if (_isPaused) {
       _togglePause();
     }
+
+    // Проверяем подключение к интернету
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final hasInternet = connectivityResult.any((r) => r != ConnectivityResult.none);
+
     setState(() {
       _isSaving = true;
-      _message = 'Расчёт маршрута...';
+      _message = hasInternet ? 'Расчёт маршрута...' : 'Нет сети. Поездка будет сохранена локально.';
     });
 
     try {
       final pointStrings = _points.map((p) => '${p.latitude},${p.longitude}').toList();
+
+      // Если нет сети — сохраняем локально
+      if (!hasInternet) {
+        final userId = await UserSettings.getUserId();
+        final tripData = {
+          'user_id': userId,
+          'city': _cityController.text.trim(),
+          'start_point': pointStrings.first,
+          'end_point': pointStrings.last,
+          'total_km': 0.0,
+          'total_duration_sec': 0,
+          'total_pause_sec': _totalPauseDuration.inSeconds,
+          'total_cost': 0.0,
+          'points': pointStrings,
+          'username': null,
+        };
+        await OfflineSyncService.addTripToQueue(tripData);
+        await ActiveTripStorage.clearActiveTrip();
+        setState(() {
+          _isSaving = false;
+          _message = 'Поездка сохранена локально. Она будет отправлена при подключении к интернету.';
+        });
+        Navigator.pop(context, true);
+        return;
+      }
+
+      // Если интернет есть, считаем маршрут и сохраняем на сервер
       final routeResult = await ApiService.calculateMultiRoute(
         points: pointStrings,
         city: _cityController.text.trim(),
@@ -294,7 +327,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
       final userId = await UserSettings.getUserId();
       final cost = await UserSettings.calculateTripCost(distanceKm);
-
       final pointsToSave = _routeGeometry.isNotEmpty
           ? _routeGeometry.map((p) => '${p.latitude},${p.longitude}').toList()
           : pointStrings;
@@ -490,7 +522,6 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                     decoration: const InputDecoration(labelText: 'Город'),
                   ),
                   const SizedBox(height: 10),
-                  // Поле ввода адреса с подсказками
                   TextField(
                     controller: _addressController,
                     decoration: const InputDecoration(labelText: 'Адрес (начните вводить)'),
