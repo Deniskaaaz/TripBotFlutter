@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/trip.dart';
 
@@ -59,12 +60,15 @@ class TripDetailScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 250,
                   child: FlutterMap(
-                    options: MapOptions(center: points.first, zoom: 12),
+                    options: MapOptions(
+                      center: points.first,
+                      zoom: 12,
+                    ),
                     children: [
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
-                        
+                        tileProvider: CachedTileProvider(),
                         userAgentPackageName: 'com.tripbot.trip_bot_app',
                       ),
                       MarkerLayer(
@@ -152,7 +156,11 @@ class TripDetailScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: _InfoRow(icon: Icons.calendar_today, label: 'Дата и время', value: _formatTimestamp(trip.timestamp)),
+                child: _InfoRow(
+                  icon: Icons.calendar_today,
+                  label: 'Дата и время',
+                  value: _formatTimestamp(trip.timestamp),
+                ),
               ),
             ),
           ],

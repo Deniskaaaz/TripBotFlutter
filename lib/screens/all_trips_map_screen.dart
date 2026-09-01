@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:latlong2/latlong.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
@@ -113,7 +114,7 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
                     TileLayer(
                       urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                       subdomains: const ['a', 'b', 'c'],
-                      
+                      tileProvider: CachedTileProvider(),
                       userAgentPackageName: 'com.tripbot.trip_bot_app',
                     ),
                     PolylineLayer(polylines: _polylines),

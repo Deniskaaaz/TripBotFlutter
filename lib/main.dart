@@ -15,7 +15,7 @@ void main() async {
       MaterialPageRoute(builder: (context) => const CreateTripScreen()),
     );
   });
-  await FlutterMapTileCaching.initialise();
+  await FlutterMapTileCaching.initialise(); // или await TileCaching.initialise(), если класс называется иначе
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();
