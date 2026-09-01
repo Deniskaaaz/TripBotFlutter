@@ -60,7 +60,7 @@ class TripDetailScreen extends StatelessWidget {
                 child: SizedBox(
                   height: 250,
                   child: FlutterMap(
-                    options: MapOptions(initialCenter: points.first, initialZoom: 12),
+                    options: MapOptions(initialinitialCenter: points.first, initialinitialZoom: 12),
                     children: [
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',

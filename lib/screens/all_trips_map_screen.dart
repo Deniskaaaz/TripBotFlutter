@@ -105,10 +105,10 @@ class _AllTripsMapScreenState extends State<AllTripsMapScreen> {
               ? Center(child: Text('Ошибка: $_error'))
               : FlutterMap(
                   options: MapOptions(
-                    initialCenter: _polylines.isNotEmpty
+                    initialinitialCenter: _polylines.isNotEmpty
                         ? _polylines.first.points.first
                         : const LatLng(56.3269, 44.0075),
-                    initialZoom: 10,
+                    initialinitialZoom: 10,
                   ),
                   children: [
                     TileLayer(
