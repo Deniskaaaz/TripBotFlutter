@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart'; // добавлен
 import 'screens/trip_list_screen.dart';
 import 'screens/create_trip_screen.dart';
 import 'updater.dart';
@@ -15,7 +15,7 @@ void main() async {
       MaterialPageRoute(builder: (context) => const CreateTripScreen()),
     );
   });
-  await FlutterMapTileCaching.initialise(); // <-- добавлено
+  await FlutterMapTileCaching.initialise();
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();
