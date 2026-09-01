@@ -1,7 +1,6 @@
-﻿import 'dart:ui' as ui;
+﻿import 'dart:ui' show DecoderCallback, Codec, instantiateImageCodec;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
@@ -39,9 +38,9 @@ class _CachedImageProvider extends ImageProvider<_CachedImageProvider> {
     );
   }
 
-  Future<ui.Codec> _loadAsync(_CachedImageProvider key) async {
+  Future<Codec> _loadAsync(_CachedImageProvider key) async {
     final file = await cacheManager.getSingleFile(url);
     final bytes = await file.readAsBytes();
-    return await ui.instantiateImageCodec(bytes);
+    return await instantiateImageCodec(bytes);
   }
 }
