@@ -22,6 +22,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   bool _isPaused = false;
   DateTime? _pauseStartTime;
   Duration _totalPauseDuration = Duration.zero;
+  DateTime? _tripStartTime; // новое поле
   bool _isSaving = false;
   bool _isAddingPoint = false;
   bool _isUpdatingGeometry = false;
@@ -59,6 +60,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         _totalPauseDuration = Duration(seconds: saved['pauseSeconds'] as int? ?? 0);
         _isPaused = saved['isPaused'] as bool? ?? false;
         _pauseStartTime = saved['pauseStartTime'] as DateTime?;
+        _tripStartTime = saved['tripStartTime'] as DateTime?; // восстановление
         _isTripActive = _points.isNotEmpty;
         if (_points.isNotEmpty) {
           _mapController.move(_points.last, 16);
@@ -103,6 +105,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       pauseSeconds: _totalPauseDuration.inSeconds,
       isPaused: _isPaused,
       pauseStartTime: _pauseStartTime,
+      tripStartTime: _tripStartTime, // сохраняем
     );
   }
 
@@ -153,6 +156,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
+        if (_points.length == 1) _tripStartTime = DateTime.now(); // старт при первой точке
         _message = 'Точка добавлена (${_points.length})';
       });
       _mapController.move(latLng, 16);
@@ -186,6 +190,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       setState(() {
         _points.add(latLng);
         if (!_isTripActive) _isTripActive = true;
+        if (_points.length == 1) _tripStartTime = DateTime.now(); // старт при первой точке
         _message = 'Адрес добавлен (${_points.length})';
         _addressController.clear();
       });
@@ -264,6 +269,17 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     try {
       final pointStrings = _points.map((p) => '${p.latitude},${p.longitude}').toList();
 
+      // Вычисляем фактическое время в пути (если есть время старта)
+      Duration actualTripDuration = Duration.zero;
+      if (_tripStartTime != null) {
+        actualTripDuration = DateTime.now().difference(_tripStartTime!) - _totalPauseDuration;
+        if (actualTripDuration.isNegative) actualTripDuration = Duration.zero;
+      } else {
+        // Если время старта потеряно, берём расчётное (будет заменено ниже)
+        actualTripDuration = Duration(seconds: 0);
+      }
+      final actualDurationSec = actualTripDuration.inSeconds;
+
       // Если нет сети — сохраняем локально
       if (!hasInternet) {
         final userId = await UserSettings.getUserId();
@@ -273,7 +289,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           'start_point': pointStrings.first,
           'end_point': pointStrings.last,
           'total_km': 0.0,
-          'total_duration_sec': 0,
+          'total_duration_sec': actualDurationSec, // фактическое время
           'total_pause_sec': _totalPauseDuration.inSeconds,
           'total_cost': 0.0,
           'points': pointStrings,
@@ -337,7 +353,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         startPoint: startAddress,
         endPoint: endAddress,
         totalKm: distanceKm,
-        totalDurationSec: durationSec,
+        totalDurationSec: actualDurationSec, // фактическое время
         totalPauseSec: _totalPauseDuration.inSeconds,
         totalCost: cost,
         points: pointsToSave,
@@ -346,7 +362,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         await ActiveTripStorage.clearActiveTrip();
         _showSummaryDialog(
           distanceKm,
-          durationSec,
+          actualDurationSec,
           cost,
           _routeGeometry.isNotEmpty ? _routeGeometry : _points,
         );
@@ -463,6 +479,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                 _isTripActive = false;
                 _isPaused = false;
                 _pauseStartTime = null;
+                _tripStartTime = null;
                 _message = 'Черновик поездки удалён';
               });
             },
