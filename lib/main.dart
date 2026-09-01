@@ -16,7 +16,8 @@ void main() async {
     );
   });
 
-  await FlutterMapTileCaching.initialise();
+  final backend = FMTCObjectBoxBackend();
+  await backend.initialise();
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();

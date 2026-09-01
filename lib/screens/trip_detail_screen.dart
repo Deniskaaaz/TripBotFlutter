@@ -65,7 +65,7 @@ class TripDetailScreen extends StatelessWidget {
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                         subdomains: const ['a', 'b', 'c'],
-                        tileProvider: StorageTileProvider(),
+                        tileProvider: FMTCTileProvider.allStores(allStoresStrategy: BrowseStoreStrategy.readUpdateCreate),
                         userAgentPackageName: 'com.tripbot.trip_bot_app',
                       ),
                       MarkerLayer(
