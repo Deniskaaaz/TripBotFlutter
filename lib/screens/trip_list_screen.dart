@@ -1,3 +1,4 @@
+import 'dart:io'; // для SocketException
 import 'package:flutter/material.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
@@ -61,6 +62,12 @@ class _TripListScreenState extends State<TripListScreen> {
         _totalKm = (stats['total_km'] as num?)?.toDouble() ?? 0.0;
         _isLoading = false;
       });
+    } on SocketException {
+      // Нет соединения с сервером
+      setState(() {
+        _error = 'Нет соединения с сервером. Проверьте интернет.';
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -89,9 +96,12 @@ class _TripListScreenState extends State<TripListScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                       const SizedBox(height: 8),
-                      Text('Ошибка: $_error'),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 10),
                       ElevatedButton.icon(
                         onPressed: _loadData,
@@ -113,7 +123,6 @@ class _TripListScreenState extends State<TripListScreen> {
                         foregroundColor: Colors.white,
                         flexibleSpace: FlexibleSpaceBar(
                           title: const Text('Мои поездки'),
-                          // Заголовок слева, места теперь достаточно
                           background: Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -146,7 +155,6 @@ class _TripListScreenState extends State<TripListScreen> {
                           ),
                         ),
                         actions: [
-                          // Выпадающее меню
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert),
                             onSelected: (value) {

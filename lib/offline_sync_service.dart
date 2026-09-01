@@ -6,7 +6,6 @@ import 'api_service.dart';
 class OfflineSyncService {
   static const String _queueKey = 'offline_trip_queue';
 
-  /// Сохраняет поездку в локальную очередь при отсутствии сети.
   static Future<void> addTripToQueue(Map<String, dynamic> tripData) async {
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getString(_queueKey);
@@ -15,9 +14,14 @@ class OfflineSyncService {
     await prefs.setString(_queueKey, jsonEncode(queue));
   }
 
-  /// Пытается отправить все поездки из очереди на сервер.
-  /// Возвращает количество успешно синхронизированных поездок.
   static Future<int> syncPendingTrips() async {
+    // Проверяем интернет перед попыткой отправки
+    final connectivityResult = await Connectivity().checkConnectivity();
+    final hasInternet = connectivityResult.any((r) => r != ConnectivityResult.none);
+    if (!hasInternet) {
+      return 0; // нет сети, ничего не делаем
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final existing = prefs.getString(_queueKey);
     if (existing == null) return 0;
@@ -57,7 +61,6 @@ class OfflineSyncService {
     return synced;
   }
 
-  /// Подписывается на изменение сети и вызывает [onOnline] при появлении интернета.
   static void listenToConnectivity(void Function() onOnline) {
     Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       final hasConnection = results.any((r) => r != ConnectivityResult.none);
