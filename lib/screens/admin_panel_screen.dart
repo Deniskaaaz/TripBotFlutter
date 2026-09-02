@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
 import 'admin_user_detail_screen.dart';
+import 'admin_statistics_screen.dart';
 
 class AdminPanelScreen extends StatefulWidget {
   final String password;
@@ -54,10 +55,25 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Админ-панель')),
+      appBar: AppBar(
+        title: const Text('Админ-панель'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.analytics_rounded),
+            tooltip: 'Общая статистика',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminStatisticsScreen(users: _users),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          // Поисковая строка
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(
