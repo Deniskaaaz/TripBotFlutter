@@ -18,6 +18,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   String? _error;
   String _searchQuery = '';
 
+  final Map<int, String?> _photoCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +37,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _users = users;
         _isLoading = false;
       });
+      for (final user in users) {
+        final userId = user['user_id'] as int;
+        if (!_photoCache.containsKey(userId)) {
+          final photoUrl = await ApiService.getUserPhotoUrl(userId, widget.password);
+          setState(() {
+            _photoCache[userId] = photoUrl;
+          });
+        }
+      }
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -113,8 +124,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             itemCount: _filteredUsers.length,
                             itemBuilder: (context, index) {
                               final user = _filteredUsers[index];
+                              final photoUrl = _photoCache[user['user_id']];
                               return _UserCard(
                                 user: user,
+                                photoUrl: photoUrl,
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -139,9 +152,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
 class _UserCard extends StatelessWidget {
   final Map<String, dynamic> user;
+  final String? photoUrl;
   final VoidCallback onTap;
 
-  const _UserCard({required this.user, required this.onTap});
+  const _UserCard({required this.user, required this.photoUrl, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +174,6 @@ class _UserCard extends StatelessWidget {
     final minutes = (totalDuration % 3600) ~/ 60;
     final durationText = hours > 0 ? '$hours ч $minutes мин' : '$minutes мин';
 
-    // Градиент для карточки
     final gradientColors = [
       Colors.deepPurple.shade400,
       Colors.purple.shade300,
@@ -193,18 +206,25 @@ class _UserCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                  if (photoUrl != null)
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: NetworkImage(photoUrl!),
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                    )
+                  else
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
