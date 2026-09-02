@@ -98,7 +98,7 @@ class MyApp extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Updater.checkForUpdate(context);
           });
-          return TripListScreen();   // <-- убран const
+          return TripListScreen();   // без const
         },
       ),
     );
