@@ -157,6 +157,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Future<void> _addCurrentLocation({bool isStart = false}) async {
     if (_isAddingLocation) return;
 
+    // Если пауза активна, завершаем её
+    if (_isPaused) {
+      _togglePause();
+    }
+
     setState(() {
       _isAddingLocation = true;
       _message = isStart ? 'Определение местоположения...' : 'Добавление точки...';
@@ -192,6 +197,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
 
   Future<void> _addManualAddress() async {
     if (_isAddingManualPoint) return;
+
+    // Если пауза активна, завершаем её
+    if (_isPaused) {
+      _togglePause();
+    }
 
     final address = _addressController.text.trim();
     if (address.isEmpty) {
