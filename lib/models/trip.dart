@@ -1,4 +1,4 @@
-class Trip {
+﻿class Trip {
   final int id;
   final String timestamp;
   final String city;
@@ -9,6 +9,8 @@ class Trip {
   final int totalPauseSec;
   final double totalCost;
   final List<String> points;
+  final List<String> waypointCoords;
+  final List<String> waypointLabels;
   final String? username;
 
   Trip({
@@ -22,6 +24,8 @@ class Trip {
     required this.totalPauseSec,
     required this.totalCost,
     required this.points,
+    required this.waypointCoords,
+    required this.waypointLabels,
     this.username,
   });
 
@@ -37,6 +41,8 @@ class Trip {
       totalPauseSec: json['total_pause_sec'] as int,
       totalCost: (json['total_cost'] as num).toDouble(),
       points: List<String>.from(json['points'] as List),
+      waypointCoords: List<String>.from(json['waypoint_coords'] as List? ?? []),
+      waypointLabels: List<String>.from(json['waypoint_labels'] as List? ?? []),
       username: json['username'] as String?,
     );
   }
