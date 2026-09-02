@@ -117,47 +117,17 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
                               itemCount: _trips.length,
                               itemBuilder: (context, index) {
                                 final trip = _trips[index];
-                                return Card(
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: ListTile(
-                                    leading: Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.deepPurple.withOpacity(0.2),
-                                        shape: BoxShape.circle,
+                                return _TripCardAdmin(
+                                  trip: trip,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => TripDetailScreen(trip: trip),
                                       ),
-                                      child: const Icon(
-                                        Icons.route_rounded,
-                                        color: Colors.deepPurple,
-                                      ),
-                                    ),
-                                    title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
-                                    subtitle: Text(
-                                      '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_rounded, color: Colors.red),
-                                          onPressed: () => _confirmDeleteTrip(trip.id),
-                                        ),
-                                        const Icon(Icons.chevron_right_rounded, color: Colors.deepPurple),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => TripDetailScreen(trip: trip),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                    );
+                                  },
+                                  onDelete: () => _confirmDeleteTrip(trip.id),
                                 );
                               },
                             ),
@@ -202,6 +172,65 @@ class _AdminUserDetailScreenState extends State<AdminUserDetailScreen> {
           Text(label, style: const TextStyle(fontSize: 14)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
+      ),
+    );
+  }
+}
+
+class _TripCardAdmin extends StatelessWidget {
+  final Trip trip;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _TripCardAdmin({
+    required this.trip,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final totalPoints = trip.points.length;
+    final intermediateCount = totalPoints > 2 ? totalPoints - 2 : 0;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.route_rounded, color: Colors.deepPurple),
+        ),
+        title: Text('${trip.city}: ${trip.startPoint} → ${trip.endPoint}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${trip.totalKm.toStringAsFixed(1)} км · ${(trip.totalDurationSec / 60).round()} мин',
+            ),
+            if (intermediateCount > 0)
+              Text(
+                'Промежуточных точек: $intermediateCount',
+                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12),
+              ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.delete_rounded, color: Colors.red),
+              onPressed: onDelete,
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Colors.deepPurple),
+          ],
+        ),
+        onTap: onTap,
       ),
     );
   }

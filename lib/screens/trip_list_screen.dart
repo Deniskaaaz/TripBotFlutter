@@ -337,6 +337,18 @@ class _TripCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
+                    // НОВОЕ: промежуточные точки
+                    if (trip.points.length > 2) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Промежуточных точек: ${trip.points.length - 2}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade500,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
