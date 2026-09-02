@@ -91,7 +91,10 @@ class _TripListScreenState extends State<TripListScreen> {
                     children: [
                       const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                       const SizedBox(height: 8),
-                      Text(_error!, textAlign: TextAlign.center),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 10),
                       ElevatedButton.icon(
                         onPressed: _loadData,
