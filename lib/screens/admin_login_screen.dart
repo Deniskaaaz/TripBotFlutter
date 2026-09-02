@@ -14,9 +14,18 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   bool _isChecking = false;
   String? _error;
 
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     final password = _passwordController.text.trim();
-    if (password.isEmpty) return;
+    if (password.isEmpty) {
+      setState(() => _error = 'Введите пароль');
+      return;
+    }
 
     setState(() {
       _isChecking = true;
@@ -33,25 +42,13 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           ),
         );
       } else {
-        setState(() {
-          _error = 'Неверный пароль';
-        });
+        setState(() => _error = 'Неверный пароль');
       }
     } catch (e) {
-      setState(() {
-        _error = 'Ошибка: $e';
-      });
+      setState(() => _error = 'Ошибка: $e');
     } finally {
-      setState(() {
-        _isChecking = false;
-      });
+      setState(() => _isChecking = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _passwordController.dispose();
-    super.dispose();
   }
 
   @override
