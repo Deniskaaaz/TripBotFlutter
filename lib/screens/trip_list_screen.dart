@@ -91,10 +91,7 @@ class _TripListScreenState extends State<TripListScreen> {
                     children: [
                       const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                       const SizedBox(height: 8),
-                      Text(
-                        _error!,
-                        textAlign: TextAlign.center,
-                      ),
+                      Text(_error!, textAlign: TextAlign.center),
                       const SizedBox(height: 10),
                       ElevatedButton.icon(
                         onPressed: _loadData,
@@ -337,11 +334,10 @@ class _TripCard extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    // НОВОЕ: промежуточные точки
-                    if (trip.points.length > 2) ...[
+                    if (trip.waypointCoords.length > 2) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'Промежуточных точек: ${trip.points.length - 2}',
+                        'Промежуточных точек: ${trip.waypointCoords.length - 2}',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade500,

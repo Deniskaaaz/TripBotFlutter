@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../api_service.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_statistics_screen.dart';
@@ -41,9 +42,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         final userId = user['user_id'] as int;
         if (!_photoCache.containsKey(userId)) {
           final photoUrl = await ApiService.getUserPhotoUrl(userId, widget.password);
-          setState(() {
-            _photoCache[userId] = photoUrl;
-          });
+          if (mounted) {
+            setState(() {
+              _photoCache[userId] = photoUrl;
+            });
+          }
         }
       }
     } catch (e) {
@@ -209,8 +212,26 @@ class _UserCard extends StatelessWidget {
                   if (photoUrl != null)
                     CircleAvatar(
                       radius: 20,
-                      backgroundImage: NetworkImage(photoUrl!),
                       backgroundColor: Colors.white.withOpacity(0.3),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: photoUrl!,
+                          fit: BoxFit.cover,
+                          width: 40,
+                          height: 40,
+                          memCacheWidth: 40,
+                          memCacheHeight: 40,
+                          placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
+                          errorWidget: (context, url, error) => Text(
+                            initials,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
                     )
                   else
                     CircleAvatar(

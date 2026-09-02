@@ -160,8 +160,8 @@ class TripDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // НОВОЕ: блок с промежуточными точками
-            if (trip.points.length > 2) ...[
+            // Промежуточные точки (адреса/названия)
+            if (trip.waypointLabels.isNotEmpty) ...[
               const SizedBox(height: 16),
               Card(
                 elevation: 3,
@@ -173,10 +173,10 @@ class TripDetailScreen extends StatelessWidget {
                     children: [
                       Text('Промежуточные точки', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
-                      for (final point in trip.points.skip(1).take(trip.points.length - 2))
+                      for (final label in trip.waypointLabels)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(point, style: const TextStyle(fontSize: 14)),
+                          child: Text('• $label', style: const TextStyle(fontSize: 14)),
                         ),
                     ],
                   ),

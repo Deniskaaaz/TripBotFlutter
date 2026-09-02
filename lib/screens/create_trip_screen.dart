@@ -157,10 +157,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Future<void> _addCurrentLocation({bool isStart = false}) async {
     if (_isAddingLocation) return;
 
-    // Если пауза активна, завершаем её
-    if (_isPaused) {
-      _togglePause();
-    }
+    if (_isPaused) _togglePause();
 
     setState(() {
       _isAddingLocation = true;
@@ -198,10 +195,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Future<void> _addManualAddress() async {
     if (_isAddingManualPoint) return;
 
-    // Если пауза активна, завершаем её
-    if (_isPaused) {
-      _togglePause();
-    }
+    if (_isPaused) _togglePause();
 
     final address = _addressController.text.trim();
     if (address.isEmpty) {
@@ -310,6 +304,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
           'total_pause_sec': _totalPauseDuration.inSeconds,
           'total_cost': 0.0,
           'points': pointStrings,
+          'waypoint_coords': pointStrings,
+          'waypoint_labels': _pointLabels,
           'username': null,
         };
         await OfflineSyncService.addTripToQueue(tripData);
@@ -373,6 +369,8 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         totalPauseSec: _totalPauseDuration.inSeconds,
         totalCost: cost,
         points: pointsToSave,
+        waypointCoords: pointStrings,
+        waypointLabels: _pointLabels,
       );
       if (success) {
         await ActiveTripStorage.clearActiveTrip();
