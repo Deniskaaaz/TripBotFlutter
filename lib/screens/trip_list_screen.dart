@@ -1,4 +1,3 @@
-import 'dart:io'; // для SocketException
 import 'package:flutter/material.dart';
 import '../api_service.dart';
 import '../models/trip.dart';
@@ -60,12 +59,6 @@ class _TripListScreenState extends State<TripListScreen> {
         final stats = results[1] as Map<String, dynamic>;
         _tripsCount = stats['trips_count'] as int? ?? 0;
         _totalKm = (stats['total_km'] as num?)?.toDouble() ?? 0.0;
-        _isLoading = false;
-      });
-    } on SocketException {
-      // Нет соединения с сервером
-      setState(() {
-        _error = 'Нет соединения с сервером. Проверьте интернет.';
         _isLoading = false;
       });
     } catch (e) {
