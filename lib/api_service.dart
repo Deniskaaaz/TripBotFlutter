@@ -6,7 +6,7 @@ class ApiService {
   static const String baseUrl = 'http://31.130.128.105:8888';
 
   static Future<List<Trip>> getTrips(int userId) async {
-    final response = await http.get(Uri.parse('$baseUrl/trips/'));
+    final response = await http.get(Uri.parse('$baseUrl/trips/$userId'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Trip.fromJson(json as Map<String, dynamic>)).toList();
@@ -70,7 +70,7 @@ class ApiService {
 
   static Future<String?> reverseGeocode(double lat, double lon) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/reverse_geocode?lat=&lon='),
+      Uri.parse('$baseUrl/reverse_geocode?lat=$lat&lon=$lon'),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -120,7 +120,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getStats(int userId) async {
-    final response = await http.get(Uri.parse('$baseUrl/stats/'));
+    final response = await http.get(Uri.parse('$baseUrl/stats/$userId'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
