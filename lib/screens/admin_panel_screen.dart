@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../api_service.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_statistics_screen.dart';
@@ -104,65 +105,144 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     ? Center(child: Text('Ошибка: $_error'))
                     : _filteredUsers.isEmpty
                         ? const Center(child: Text('Пользователи не найдены'))
-                        : ListView.builder(
+                        : MasonryGridView.count(
                             padding: const EdgeInsets.all(8),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
                             itemCount: _filteredUsers.length,
                             itemBuilder: (context, index) {
                               final user = _filteredUsers[index];
-                              final duration = user['total_duration'] ?? 0;
-                              final hours = duration ~/ 3600;
-                              final minutes = (duration % 3600) ~/ 60;
-                              final durationText = hours > 0
-                                  ? '$hours ч $minutes мин'
-                                  : '$minutes мин';
-
-                              final username = user['username'] as String?;
-                              final displayName = (username != null && username.isNotEmpty)
-                                  ? '$username (ID: ${user['user_id']})'
-                                  : 'User ID: ${user['user_id']}';
-
-                              return Card(
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: ListTile(
-                                  leading: Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.deepPurple.withOpacity(0.2),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.person_rounded,
-                                      color: Colors.deepPurple,
-                                    ),
-                                  ),
-                                  title: Text(displayName),
-                                  subtitle: Text(
-                                    'Поездок: ${user['trips_count']}\n'
-                                    'Км: ${(user['total_km'] ?? 0).toStringAsFixed(1)}\n'
-                                    'Время: $durationText\n'
-                                    'Стоимость: ${(user['total_cost'] ?? 0).toStringAsFixed(2)} ₽',
-                                  ),
-                                  isThreeLine: true,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => AdminUserDetailScreen(
-                                          userId: user['user_id'] as int,
-                                          username: username,
-                                          password: widget.password,
-                                        ),
+                              return _UserCard(
+                                user: user,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AdminUserDetailScreen(
+                                        userId: user['user_id'] as int,
+                                        username: user['username'] as String?,
+                                        password: widget.password,
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UserCard extends StatelessWidget {
+  final Map<String, dynamic> user;
+  final VoidCallback onTap;
+
+  const _UserCard({required this.user, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final username = user['username'] as String?;
+    final displayName = (username != null && username.isNotEmpty)
+        ? username
+        : 'ID: ${user['user_id']}';
+    final initials = displayName.isNotEmpty ? displayName.substring(0, 1).toUpperCase() : '?';
+
+    final tripsCount = user['trips_count'] ?? 0;
+    final totalKm = (user['total_km'] as num?)?.toDouble() ?? 0;
+    final totalDuration = user['total_duration'] ?? 0;
+    final totalCost = (user['total_cost'] as num?)?.toDouble() ?? 0;
+
+    final hours = totalDuration ~/ 3600;
+    final minutes = (totalDuration % 3600) ~/ 60;
+    final durationText = hours > 0 ? '$hours ч $minutes мин' : '$minutes мин';
+
+    // Градиент для карточки
+    final gradientColors = [
+      Colors.deepPurple.shade400,
+      Colors.purple.shade300,
+      Colors.blue.shade300,
+    ];
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    child: Text(
+                      initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      displayName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _statLine(Icons.confirmation_number_rounded, '$tripsCount'),
+              _statLine(Icons.straighten_rounded, '${totalKm.toStringAsFixed(1)} км'),
+              _statLine(Icons.timer_rounded, durationText),
+              _statLine(Icons.attach_money_rounded, '${totalCost.toStringAsFixed(2)} ₽'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statLine(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: Colors.white70),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
