@@ -18,6 +18,7 @@ class CreateTripScreen extends StatefulWidget {
 
 class _CreateTripScreenState extends State<CreateTripScreen> {
   final List<LatLng> _points = [];
+  final List<String> _pointLabels = [];
   List<LatLng> _routeGeometry = [];
   bool _isTripActive = false;
   bool _isPaused = false;
@@ -25,13 +26,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
   Duration _totalPauseDuration = Duration.zero;
   DateTime? _tripStartTime;
   bool _isSaving = false;
-  bool _isAddingPoint = false;
+  bool _isAddingLocation = false;
+  bool _isAddingManualPoint = false;
   bool _isUpdatingGeometry = false;
   String _message = '';
 
   final _cityController = TextEditingController(text: 'Нижний Новгород');
   final _addressController = TextEditingController();
-  List<String> _addressSuggestions = [];
 
   final MapController _mapController = MapController();
 
@@ -56,8 +57,13 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
         return null;
       }).whereType<LatLng>().toList();
 
+      final labels = points.map((p) =>
+          'GPS точка (${p.latitude.toStringAsFixed(4)}, ${p.longitude.toStringAsFixed(4)})'
+      ).toList();
+
       setState(() {
         _points.addAll(points);
+        _pointLabels.addAll(labels);
         _totalPauseDuration = Duration(seconds: saved['pauseSeconds'] as int? ?? 0);
         _isPaused = saved['isPaused'] as bool? ?? false;
         _pauseStartTime = saved['pauseStartTime'] as DateTime?;
@@ -148,16 +154,28 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     }
   }
 
-  Future<void> _addCurrentLocation() async {
+  Future<void> _addCurrentLocation({bool isStart = false}) async {
+    if (_isAddingLocation) return;
+
+    setState(() {
+      _isAddingLocation = true;
+      _message = isStart ? 'Определение местоположения...' : 'Добавление точки...';
+    });
+
     try {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       final latLng = LatLng(position.latitude, position.longitude);
+      final label = 'GPS точка ${_points.length + 1} (${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)})';
+
       setState(() {
         _points.add(latLng);
-        if (!_isTripActive) _isTripActive = true;
-        if (_points.length == 1) _tripStartTime = DateTime.now();
+        _pointLabels.add(label);
+        if (!_isTripActive) {
+          _isTripActive = true;
+          _tripStartTime = DateTime.now();
+        }
         _message = 'Точка добавлена (${_points.length})';
       });
       _mapController.move(latLng, 16);
@@ -167,16 +185,25 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       }
     } catch (e) {
       setState(() => _message = 'Не удалось получить GPS: $e');
+    } finally {
+      setState(() => _isAddingLocation = false);
     }
   }
 
-  Future<void> _addAddressFromSuggestion(String address) async {
-    _addressController.text = address;
-    setState(() => _addressSuggestions = []);
+  Future<void> _addManualAddress() async {
+    if (_isAddingManualPoint) return;
+
+    final address = _addressController.text.trim();
+    if (address.isEmpty) {
+      setState(() => _message = 'Введите адрес');
+      return;
+    }
+
     setState(() {
-      _isAddingPoint = true;
+      _isAddingManualPoint = true;
       _message = 'Геокодирование...';
     });
+
     try {
       final result = await ApiService.geocodeAddress(
         address,
@@ -190,8 +217,11 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
       final latLng = LatLng(lat, lon);
       setState(() {
         _points.add(latLng);
-        if (!_isTripActive) _isTripActive = true;
-        if (_points.length == 1) _tripStartTime = DateTime.now();
+        _pointLabels.add(address);
+        if (!_isTripActive) {
+          _isTripActive = true;
+          _tripStartTime = DateTime.now();
+        }
         _message = 'Адрес добавлен (${_points.length})';
         _addressController.clear();
       });
@@ -203,23 +233,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
     } catch (e) {
       setState(() => _message = 'Ошибка геокодирования: $e');
     } finally {
-      setState(() => _isAddingPoint = false);
-    }
-  }
-
-  Future<void> _fetchAddressSuggestions(String query) async {
-    if (query.length < 3) {
-      setState(() => _addressSuggestions = []);
-      return;
-    }
-    try {
-      final suggestions = await ApiService.suggestAddresses(
-        query,
-        city: _cityController.text.trim(),
-      );
-      setState(() => _addressSuggestions = suggestions);
-    } catch (e) {
-      setState(() => _addressSuggestions = []);
+      setState(() => _isAddingManualPoint = false);
     }
   }
 
@@ -460,12 +474,15 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
               await ActiveTripStorage.clearActiveTrip();
               setState(() {
                 _points.clear();
+                _pointLabels.clear();
                 _routeGeometry.clear();
                 _totalPauseDuration = Duration.zero;
                 _isTripActive = false;
                 _isPaused = false;
                 _pauseStartTime = null;
                 _tripStartTime = null;
+                _isAddingLocation = false;
+                _isAddingManualPoint = false;
                 _message = 'Черновик поездки удалён';
               });
             },
@@ -526,36 +543,21 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _addressController,
-                    decoration: const InputDecoration(labelText: 'Адрес (начните вводить)'),
-                    onChanged: _fetchAddressSuggestions,
+                    decoration: const InputDecoration(labelText: 'Адрес (введите полностью)'),
+                    // автодополнение отключено
                   ),
-                  if (_addressSuggestions.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(top: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: _addressSuggestions.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final suggestion = _addressSuggestions[index];
-                          return ListTile(
-                            dense: true,
-                            title: Text(suggestion),
-                            onTap: () => _addAddressFromSuggestion(suggestion),
-                          );
-                        },
-                      ),
-                    ),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                    onPressed: _isAddingManualPoint ? null : _addManualAddress,
+                    icon: const Icon(Icons.edit_location_alt_rounded),
+                    label: const Text('Добавить адрес'),
+                  ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _isTripActive ? null : _addCurrentLocation,
+                          onPressed: (!_isTripActive && !_isAddingLocation) ? () => _addCurrentLocation(isStart: true) : null,
                           icon: const Icon(Icons.my_location_rounded),
                           label: const Text('Начать'),
                         ),
@@ -563,7 +565,7 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _isTripActive ? _addCurrentLocation : null,
+                          onPressed: (_isTripActive && !_isAddingLocation) ? () => _addCurrentLocation() : null,
                           icon: const Icon(Icons.gps_fixed_rounded),
                           label: const Text('Я на адресе'),
                         ),
@@ -592,8 +594,20 @@ class _CreateTripScreenState extends State<CreateTripScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text('Точек: ${_points.length}', style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 8),
+                  // Список добавленных точек
+                  ..._pointLabels.reversed.map((label) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Text(
+                          '• $label',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      )),
                   if (_totalPauseDuration.inSeconds > 0)
-                    Text('Пауза: ${_totalPauseDuration.inMinutes} мин'),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text('Пауза: ${_totalPauseDuration.inMinutes} мин'),
+                    ),
                   if (_message.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
