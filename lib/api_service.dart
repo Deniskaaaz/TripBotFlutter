@@ -1,4 +1,4 @@
-import 'dart:convert';
+п»їimport 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'models/trip.dart';
 
@@ -6,12 +6,12 @@ class ApiService {
   static const String baseUrl = 'http://31.130.128.105:8888';
 
   static Future<List<Trip>> getTrips(int userId) async {
-    final response = await http.get(Uri.parse('$baseUrl/trips/'));
+    final response = await http.get(Uri.parse('/trips/'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((json) => Trip.fromJson(json as Map<String, dynamic>)).toList();
     } else {
-      throw Exception('шибка загрузки поездок: ');
+      throw Exception('С€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїРѕРµР·РґРѕРє: ');
     }
   }
 
@@ -21,7 +21,7 @@ class ApiService {
     required String city,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/route'),
+      Uri.parse('/route'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'origin': origin,
@@ -32,7 +32,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      throw Exception('шибка расчёта маршрута: ');
+      throw Exception('С€РёР±РєР° СЂР°СЃС‡С‘С‚Р° РјР°СЂС€СЂСѓС‚Р°: ');
     }
   }
 
@@ -41,7 +41,7 @@ class ApiService {
     String city = '',
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/route_multi'),
+      Uri.parse('/route_multi'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'points': points,
@@ -51,12 +51,12 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      throw Exception('шибка расчёта маршрута: ');
+      throw Exception('С€РёР±РєР° СЂР°СЃС‡С‘С‚Р° РјР°СЂС€СЂСѓС‚Р°: ');
     }
   }
 
   static Future<Map<String, dynamic>> geocodeAddress(String address, {String? city}) async {
-    final uri = Uri.parse('$baseUrl/geocode').replace(queryParameters: {
+    final uri = Uri.parse('/geocode').replace(queryParameters: {
       'address': address,
       if (city != null && city.isNotEmpty) 'city': city,
     });
@@ -64,13 +64,13 @@ class ApiService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      throw Exception('шибка геокодирования: ');
+      throw Exception('С€РёР±РєР° РіРµРѕРєРѕРґРёСЂРѕРІР°РЅРёСЏ: ');
     }
   }
 
   static Future<String?> reverseGeocode(double lat, double lon) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/reverse_geocode?lat=&lon='),
+      Uri.parse('/reverse_geocode?lat=&lon='),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -95,7 +95,7 @@ class ApiService {
     String? username,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/save_trip'),
+      Uri.parse('/save_trip'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'user_id': userId,
@@ -115,48 +115,48 @@ class ApiService {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('шибка сохранения поездки: ');
+      throw Exception('С€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РїРѕРµР·РґРєРё: ');
     }
   }
 
   static Future<Map<String, dynamic>> getStats(int userId) async {
-    final response = await http.get(Uri.parse('$baseUrl/stats/'));
+    final response = await http.get(Uri.parse('/stats/'));
     if (response.statusCode == 200) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
-      throw Exception('шибка загрузки статистики: ');
+      throw Exception('С€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃС‚Р°С‚РёСЃС‚РёРєРё: ');
     }
   }
 
   static Future<bool> adminLogin(String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/admin/login?password='),
+      Uri.parse('/admin/login?password='),
     );
     return response.statusCode == 200;
   }
 
   static Future<List<Map<String, dynamic>>> adminUsers(String password) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/admin/users?password='),
+      Uri.parse('/admin/users?password='),
     );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((e) => e as Map<String, dynamic>).toList();
     } else {
-      throw Exception('шибка доступа: ');
+      throw Exception('С€РёР±РєР° РґРѕСЃС‚СѓРїР°: ');
     }
   }
 
   static Future<bool> adminDeleteTrip(int tripId, String password) async {
     final response = await http.delete(
-      Uri.parse('$baseUrl/admin/trip/='),
+      Uri.parse('/admin/trip/='),
     );
     return response.statusCode == 200;
   }
 
   static Future<int?> resolveUsername(String username) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/resolve_username?username='),
+      Uri.parse('/resolve_username?username='),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -168,7 +168,7 @@ class ApiService {
 
   static Future<String?> getUserPhotoUrl(int userId, String password) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/admin/user_photo?user_id=&password='),
+      Uri.parse('/admin/user_photo?user_id=&password='),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -177,4 +177,3 @@ class ApiService {
     return null;
   }
 }
-
