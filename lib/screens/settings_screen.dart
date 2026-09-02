@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api_service.dart';
 import '../user_settings.dart';
+import '../updater.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double? _currentFuelConsumption;
   double? _currentFuelPrice;
   bool _isSaving = false;
+  bool _isCheckingUpdates = false;
   String? _error;
 
   @override
@@ -128,6 +130,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _checkForUpdates() async {
+    setState(() => _isCheckingUpdates = true);
+    final hasUpdate = await Updater.checkForUpdate(context);
+    if (!hasUpdate && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('У вас последняя версия')),
+      );
+    }
+    if (mounted) setState(() => _isCheckingUpdates = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,7 +150,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ---- Настройки пользователя ----
             Text('Профиль', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             TextField(
@@ -160,7 +172,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const Divider(height: 32),
 
-            // ---- Параметры топлива ----
             Text('Топливо', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             TextField(
@@ -182,6 +193,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ElevatedButton(
               onPressed: _isSaving ? null : _saveFuelSettings,
               child: const Text('Сохранить топливо'),
+            ),
+
+            const Divider(height: 32),
+
+            Text('Обновление', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              onPressed: _isCheckingUpdates ? null : _checkForUpdates,
+              icon: _isCheckingUpdates
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.system_update_alt),
+              label: Text(_isCheckingUpdates ? 'Проверка...' : 'Проверить обновления'),
             ),
 
             if (_error != null) ...[
