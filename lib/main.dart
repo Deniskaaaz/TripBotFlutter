@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'screens/trip_list_screen.dart';
 import 'screens/create_trip_screen.dart';
 import 'updater.dart';
@@ -17,7 +17,7 @@ void main() async {
 
   OfflineSyncService.listenToConnectivity(() async {
     final synced = await OfflineSyncService.syncPendingTrips();
-    if (synced > 0) debugPrint('РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ РїРѕРµР·РґРѕРє: $synced');
+    if (synced > 0) debugPrint('Синхронизировано поездок: $synced');
   });
   await OfflineSyncService.syncPendingTrips();
 
@@ -98,10 +98,9 @@ class MyApp extends StatelessWidget {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             Updater.checkForUpdate(context);
           });
-          return const TripListScreen();
+          return TripListScreen();   // <-- убран const
         },
       ),
     );
   }
 }
-
