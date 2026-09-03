@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../api_service.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_statistics_screen.dart';
@@ -200,21 +201,25 @@ class _UserCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    backgroundImage: NetworkImage(photoUrl),
-                    child: initials.isEmpty
-                        ? null
-                        : Text(
-                            initials,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                  ),
+                  if (photoUrl != null)
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      backgroundImage: CachedNetworkImageProvider(photoUrl),
+                    )
+                  else
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white.withOpacity(0.3),
+                      child: Text(
+                        initials,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
