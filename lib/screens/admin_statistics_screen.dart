@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../api_service.dart';
 
 class AdminStatisticsScreen extends StatelessWidget {
   final List<Map<String, dynamic>> users;
+  final String password;
 
-  const AdminStatisticsScreen({Key? key, required this.users}) : super(key: key);
+  const AdminStatisticsScreen({
+    Key? key,
+    required this.users,
+    required this.password,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Вычисляем общую статистику
     int totalTrips = 0;
     double totalKm = 0;
     int totalDuration = 0;
@@ -24,7 +30,6 @@ class AdminStatisticsScreen extends StatelessWidget {
     final avgKm = users.isEmpty ? 0 : totalKm / users.length;
     final avgCost = users.isEmpty ? 0 : totalCost / users.length;
 
-    // Топ пользователей по километражу
     final sortedByKm = List<Map<String, dynamic>>.from(users)
       ..sort((a, b) => ((b['total_km'] as num?)?.toDouble() ?? 0)
           .compareTo((a['total_km'] as num?)?.toDouble() ?? 0));
@@ -99,12 +104,22 @@ class AdminStatisticsScreen extends StatelessWidget {
                   ? username
                   : 'User ID: ${user['user_id']}';
               final km = (user['total_km'] as num?)?.toDouble() ?? 0;
+              final photoUrl = ApiService.getUserPhotoUrl(
+                user['user_id'] as int,
+                password,
+              );
+
               return Card(
                 elevation: 2,
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Colors.deepPurple.withOpacity(0.2),
-                    child: const Icon(Icons.person, color: Colors.deepPurple),
+                    backgroundImage: photoUrl != null
+                        ? CachedNetworkImageProvider(photoUrl)
+                        : null,
+                    child: photoUrl == null
+                        ? const Icon(Icons.person, color: Colors.deepPurple)
+                        : null,
                   ),
                   title: Text(displayName),
                   trailing: Text('${km.toStringAsFixed(1)} км'),
