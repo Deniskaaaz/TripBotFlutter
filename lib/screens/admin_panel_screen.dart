@@ -67,7 +67,10 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AdminStatisticsScreen(users: _users),
+                  builder: (context) => AdminStatisticsScreen(
+                    users: _users,
+                    password: widget.password,
+                  ),
                 ),
               );
             },
