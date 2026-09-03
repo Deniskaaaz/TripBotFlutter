@@ -130,7 +130,7 @@ class ApiService {
 
   static Future<bool> adminLogin(String password) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/admin/login?password='),
+      Uri.parse('$baseUrl/admin/login?password=$password'),
     );
     return response.statusCode == 200;
   }
