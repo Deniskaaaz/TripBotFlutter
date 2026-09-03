@@ -166,14 +166,8 @@ class ApiService {
     }
   }
 
-  static Future<String?> getUserPhotoUrl(int userId, String password) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/admin/user_photo?user_id=$userId&password=$password'),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return data['photo_url'] as String?;
-    }
-    return null;
+  // Новый метод: возвращает URL на наш сервер, который проксирует фото Telegram
+  static String getUserPhotoUrl(int userId, String password) {
+    return '$baseUrl/admin/user_photo?user_id=$userId&password=$password';
   }
 }
