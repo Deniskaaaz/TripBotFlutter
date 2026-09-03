@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../api_service.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_statistics_screen.dart';
@@ -19,8 +18,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   String? _error;
   String _searchQuery = '';
 
-  final Map<int, String?> _photoCache = {};
-
   @override
   void initState() {
     super.initState();
@@ -38,17 +35,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
         _users = users;
         _isLoading = false;
       });
-      for (final user in users) {
-        final userId = user['user_id'] as int;
-        if (!_photoCache.containsKey(userId)) {
-          final photoUrl = await ApiService.getUserPhotoUrl(userId, widget.password);
-          if (mounted) {
-            setState(() {
-              _photoCache[userId] = photoUrl;
-            });
-          }
-        }
-      }
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -127,10 +113,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             itemCount: _filteredUsers.length,
                             itemBuilder: (context, index) {
                               final user = _filteredUsers[index];
-                              final photoUrl = _photoCache[user['user_id']];
                               return _UserCard(
                                 user: user,
-                                photoUrl: photoUrl,
+                                password: widget.password,
                                 onTap: () {
                                   Navigator.push(
                                     context,
@@ -155,10 +140,14 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
 
 class _UserCard extends StatelessWidget {
   final Map<String, dynamic> user;
-  final String? photoUrl;
+  final String password;
   final VoidCallback onTap;
 
-  const _UserCard({required this.user, required this.photoUrl, required this.onTap});
+  const _UserCard({
+    required this.user,
+    required this.password,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +171,8 @@ class _UserCard extends StatelessWidget {
       Colors.purple.shade300,
       Colors.blue.shade300,
     ];
+
+    final photoUrl = ApiService.getUserPhotoUrl(user['user_id'] as int, password);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
@@ -209,20 +200,13 @@ class _UserCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (photoUrl != null)
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      child: ClipOval(
-                        child: CachedNetworkImage(
-                          imageUrl: photoUrl!,
-                          fit: BoxFit.cover,
-                          width: 40,
-                          height: 40,
-                          memCacheWidth: 40,
-                          memCacheHeight: 40,
-                          placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
-                          errorWidget: (context, url, error) => Text(
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    backgroundImage: NetworkImage(photoUrl),
+                    child: initials.isEmpty
+                        ? null
+                        : Text(
                             initials,
                             style: const TextStyle(
                               color: Colors.white,
@@ -230,22 +214,7 @@ class _UserCard extends StatelessWidget {
                               fontSize: 18,
                             ),
                           ),
-                        ),
-                      ),
-                    )
-                  else
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.white.withOpacity(0.3),
-                      child: Text(
-                        initials,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
