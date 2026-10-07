@@ -50,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _saveUsername() async {
-    final username = _usernameController.text.trim();
+    final username = _usernameController.text.trim().replaceFirst('@', '').toLowerCase();
     if (username.isEmpty) {
       setState(() => _error = 'Введите username');
       return;
